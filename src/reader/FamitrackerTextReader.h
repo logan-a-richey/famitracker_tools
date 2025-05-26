@@ -17,6 +17,7 @@ public:
 private:
     std::map<std::string, std::unique_ptr<AbstractReaderStrategy>> dispatch;
     void load_dispatch();
+    std::string clean_line(const std::string& input);
 
     int current_dpcm_index;
     int current_track_index;

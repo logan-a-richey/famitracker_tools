@@ -1,4 +1,4 @@
-// project.h
+// Project.h
 
 #pragma once
 
@@ -8,6 +8,8 @@
 
 class Project {
 public:
+    void print_self();
+
     // song information settings
     std::string title;
     std::string author;

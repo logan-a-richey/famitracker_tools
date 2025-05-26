@@ -14,7 +14,9 @@ int main(int argc, char** argv){
 
     Project my_project;
     FamitrackerTextReader my_text_reader;
+    
     my_text_reader.read_file(my_project, input_file);
+    my_project.print_self();
 
     return 0;
 }

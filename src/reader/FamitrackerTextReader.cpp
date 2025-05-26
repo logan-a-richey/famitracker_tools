@@ -3,10 +3,12 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
+
 #include <map>
 #include <memory>
-
-#include <string>
+#include <algorithm>
+#include <cctype>
 
 #include "reader/FamitrackerTextReader.h"
 #include "strategies/AbstractReaderStrategy.h"
@@ -55,6 +57,15 @@ void FamitrackerTextReader::load_dispatch(){
     */
 }
 
+std::string FamitrackerTextReader::clean_line(const std::string& input){
+    std::string output;
+    std::copy_if(input.begin(), input.end(), std::back_inserter(output),
+        [](unsigned char c) {
+            return c == '\n' || (c >= 32 && c <= 126);
+        });
+    return output;
+}
+
 void FamitrackerTextReader::read_file(Project& project, const std::string& input_file) {
     // std::cout << "Reading file!" << std::endl;
     std::ifstream infile(input_file);
@@ -65,7 +76,9 @@ void FamitrackerTextReader::read_file(Project& project, const std::string& input
 
     std::string line;
     while (std::getline(infile, line)) {
+        line = clean_line(line);
         std::istringstream iss(line);
+        
         std::string token;
         iss >> token;
         

@@ -1,4 +1,5 @@
 *.exe
+.vscode
 input_files
 bin
 build

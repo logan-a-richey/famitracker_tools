@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "project.h"
-#include "famitracker_text_reader.h"
+#include "project/Project.h"
+#include "reader/FamitrackerTextReader.h"
 
 int main(int argc, char** argv){
     if  (argc != 2){

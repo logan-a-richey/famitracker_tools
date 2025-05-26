@@ -1,4 +1,4 @@
-// title_strategy.h
+// TitleStrategy.h
 
 #pragma once
 

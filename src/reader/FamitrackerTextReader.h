@@ -1,4 +1,4 @@
-// famitracker_text_reader.h
+// FamitrackerTextReader.h
 
 #pragma once
 

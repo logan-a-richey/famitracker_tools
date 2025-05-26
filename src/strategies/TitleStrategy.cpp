@@ -1,4 +1,4 @@
-// title_strategy.cpp
+// TitleStrategy.cpp
 
 #include <iostream>
 #include <string>

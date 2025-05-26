@@ -1,4 +1,4 @@
-// famitracker_text_reader.cpp
+// FamitrackerTextReader.cpp
 
 #include <iostream>
 #include <fstream>

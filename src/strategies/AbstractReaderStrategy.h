@@ -1,4 +1,4 @@
-// abstract_reader_strategy.h
+// AbstractReaderStrategy.h
 
 #pragma once
 

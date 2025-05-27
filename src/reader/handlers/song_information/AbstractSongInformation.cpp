@@ -10,7 +10,7 @@
 using famitracker::reader::handler::AbstractSongInformation;
 
 void AbstractSongInformation::handle( const std::string& line, famitracker::Project& project){
-    // TITLE "VALUE"
+    // FIELD "VALUE"
     // (1) grab the first word 
     // (2) grab the text inside of quotes
     static const std::regex pattern("^\\s*(\\w+)\\s+\"(.*)\"$");

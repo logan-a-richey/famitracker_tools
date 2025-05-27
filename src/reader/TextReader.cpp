@@ -17,6 +17,15 @@
 #include "reader/handlers/song_information/CopyrightHandler.h"
 #include "reader/handlers/song_information/CommentHandler.h"
 
+#include "reader/handlers/global_settings/MachineHandler.h"
+/* TODO
+#include "reader/handlers/global_settings/FramerateHandler.h"
+#include "reader/handlers/global_settings/ExpansionHandler.h"
+#include "reader/handlers/global_settings/VibratoHandler.h"
+#include "reader/handlers/global_settings/SplitHandler.h"
+#include "reader/handlers/global_settings/N163ChannelsHandler.h"
+*/
+
 using famitracker::reader::TextReader;
 
 TextReader::TextReader(){
@@ -24,13 +33,42 @@ TextReader::TextReader(){
 }
 
 void TextReader::load_dispatch(){
+    // -- Song Information ---
     dispatch["TITLE"] = std::make_unique<famitracker::reader::handler::TitleHandler>();
     dispatch["AUTHOR"] = std::make_unique<famitracker::reader::handler::AuthorHandler>();
     dispatch["COPYRIGHT"] = std::make_unique<famitracker::reader::handler::CopyrightHandler>();
     dispatch["COMMENT"] = std::make_unique<famitracker::reader::handler::CommentHandler>();
-    /* 
-        TODO
+    
+    // --- Global Settings ---
+    dispatch["MACHINE"] = std::make_unique<famitracker::reader::handler::MachineHandler>();
+    /* TODO
+    dispatch["FRAMERATE"] = std::make_unique<famitracker::reader::handler::FramerateHandler>();
+    dispatch["EXPANSION"] = std::make_unique<famitracker::reader::handler::ExpansionHandler>();
+    dispatch["VIBRATO"] = std::make_unique<famitracker::reader::handler::VibratoHandler>();
+    dispatch["SPLIT"] = std::make_unique<famitracker::reader::handler::SplitHandler>();
+    dispatch["N163CHANNELS"] = std::make_unique<famitracker::reader::handler::N163ChannelsHandler>();
     */
+    // --- Macros ---
+    // TODO
+
+    // --- DPCM ---
+    // TODO
+    
+    // --- Groove ---
+    // TODO
+    
+    // --- Instruments ---
+    // TODO
+    
+    // --- KeyDPCM ---
+    // TODO
+
+    // --- Other ---
+    // TODO
+
+    // --- Tracks ---
+    // TODO
+    
 }
 
 std::string TextReader::clean_line(const std::string& input){
@@ -68,3 +106,4 @@ void TextReader::read_file(const std::string& input_file, Project& project) {
 
     }
 }
+

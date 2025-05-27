@@ -24,10 +24,10 @@ namespace famitracker {
         std::string copyright;
         std::string comment;
         
-        bool machine;
+        int machine;
         int framerate;
         int expansion;
-        bool vibrato;
+        int vibrato;
         int namco_channels;
 
         /* TODO

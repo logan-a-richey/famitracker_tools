@@ -14,7 +14,7 @@ namespace famitracker::reader::handler {
         void handle(const std::string& line, famitracker::Project& project) override final;
     
     protected:
-        virtual void load_data(const int value, famitracker::Project& project) = 0;
+        virtual void load_data(const std::string& line, const int value, famitracker::Project& project) = 0;
     };
 
 }

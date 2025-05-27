@@ -1,8 +1,8 @@
 # Famitracker Tools
 
-A suite of developer-focused utilities designed to enhance and streamline music composition in [Famitracker](http://famitracker.com/) — the definitive tracker for authentic NES-style chiptune music.
-
-This project was born from hands-on frustration with the repetitive, manual editing involved in Famitracker workflows. By operating directly on its text export format, these tools enable powerful data manipulation, automation, and creative flexibility — all while remaining faithful to the NES aesthetic.
+A suite of utilities designed to enhance and streamline music composition in [Famitracker](http://famitracker.com/), the standard tracker for authentic NES-style chiptune music.
+As a dedicated Famitracker user, I have often run into the limitations of manual editing and repetitive tasks. 
+This project provides tools that operate directly on Famitracker's text export format, enabling more powerful manipulation, automation, and creative control.
 
 ---
 

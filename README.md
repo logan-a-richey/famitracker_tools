@@ -12,6 +12,20 @@ This project provides tools that operate directly on Famitracker's text export f
 * Accelerate the NES-style composition process through programmatic editing tools.
 * Provide a clean, extensible codebase suitable for showcasing software engineering skills and for building additional features.
 
+## Roadmap
+
+⚠️  Work in progress — features incomplete, active development ongoing.
+
+[ ] `TextReader`: parse Famitracker text exports
+[ ] `MidiWriter`: integrate and update submodule
+[ ] `TextToMidi`: convert parsed data to MIDI
+[ ] Logging: add trace/debug support
+[ ] Error handling: improve robustness
+[ ] Unit tests: regex patterns and core module coverage
+[ ] `AutoVibrato`: finalize auto-vibrato injection logic
+
+
+Finalize vibrato injection tool (auto macro placement)
 ---
 
 ## 🔧 Technical Highlights

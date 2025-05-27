@@ -6,15 +6,22 @@
 
 void famitracker::Project::print_self(){
     std::cout 
-    << "--- Project Data ---" << std::endl 
-    << "--- Song Information ---" << std::endl 
-    << "TITLE       : \'" << title << "\'" << std::endl 
-    << "AUTHOR      : \'" << author << "\'" << std::endl 
-    << "COPYRIGHT   : \'" << copyright << "\'" << std::endl 
-    << "COMMENT     : \'" << comment << "\'" << std::endl << std::endl
-    << "--- Global Settings ---" << std::endl
-    << "MACHINE     : " << machine << std::endl;
-
+    << "--- Project Data ---" << "\n" 
+    << "--- Song Information ---" << "\n" 
+    << "TITLE        : \'" << title << "\'" << "\n" 
+    << "AUTHOR       : \'" << author << "\'" << "\n" 
+    << "COPYRIGHT    : \'" << copyright << "\'" << "\n" 
+    << "COMMENT      : \'" << comment << "\'" << "\n"
+    << "\n"
+    << "--- Global Settings ---" << "\n"
+    << "MACHINE      : " << machine << "\n"
+    << "FRAMERATE    : " << framerate << "\n"
+    << "EXPANSION    : " << expansion << "\n"
+    << "VIBRATO      : " << vibrato << "\n"
+    << "SPLIT        : " << split << "\n"
+    << "N163CHANNELS : " << n163channels << "\n"
+    << std::endl;
+    
     /* TODO */
 
 }

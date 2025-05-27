@@ -18,13 +18,11 @@
 #include "reader/handlers/song_information/CommentHandler.h"
 
 #include "reader/handlers/global_settings/MachineHandler.h"
-/* TODO
 #include "reader/handlers/global_settings/FramerateHandler.h"
 #include "reader/handlers/global_settings/ExpansionHandler.h"
 #include "reader/handlers/global_settings/VibratoHandler.h"
 #include "reader/handlers/global_settings/SplitHandler.h"
 #include "reader/handlers/global_settings/N163ChannelsHandler.h"
-*/
 
 using famitracker::reader::TextReader;
 
@@ -41,13 +39,12 @@ void TextReader::load_dispatch(){
     
     // --- Global Settings ---
     dispatch["MACHINE"] = std::make_unique<famitracker::reader::handler::MachineHandler>();
-    /* TODO
     dispatch["FRAMERATE"] = std::make_unique<famitracker::reader::handler::FramerateHandler>();
     dispatch["EXPANSION"] = std::make_unique<famitracker::reader::handler::ExpansionHandler>();
     dispatch["VIBRATO"] = std::make_unique<famitracker::reader::handler::VibratoHandler>();
     dispatch["SPLIT"] = std::make_unique<famitracker::reader::handler::SplitHandler>();
     dispatch["N163CHANNELS"] = std::make_unique<famitracker::reader::handler::N163ChannelsHandler>();
-    */
+    
     // --- Macros ---
     // TODO
 

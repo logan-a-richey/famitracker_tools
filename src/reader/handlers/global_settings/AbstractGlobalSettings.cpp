@@ -16,11 +16,17 @@ void AbstractGlobalSettings::handle( const std::string& line, famitracker::Proje
     static const std::regex pattern("\\s*(\\w+)\\s+(\\-?\\d+)$");
 
     std::smatch match;
+
+    // DEBUG
+    // std::cout << "[DEBUG] Scanning line: " << line << std::endl;
+
     if (std::regex_match(line, match, pattern)){
         std::string str_num = match[2];
         int int_num = std::stoi(str_num);
         load_data(line, int_num, project);
     } else {
-        std::cout << "[E] Could match Global Setings line: " << line << std::endl;
+        std::cout << "[W] Could match Global Setings line: " << line << std::endl;
+        std::cout << "Skipping." << std::endl;
     }
 }
+

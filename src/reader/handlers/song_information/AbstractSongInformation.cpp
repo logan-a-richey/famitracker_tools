@@ -18,7 +18,7 @@ void AbstractSongInformation::handle( const std::string& line, famitracker::Proj
     std::smatch match;
     if (std::regex_match(line, match, pattern)){
         std::string value = match[2];
-        load_data(line, project);
+        load_data(value, project);
     } else {
         std::cout << "[E] Could not match Song Information line: " << line << std::endl;
     }

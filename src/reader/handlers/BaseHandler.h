@@ -1,5 +1,7 @@
 // BaseHandler.h
 
+#pragma once
+
 #include <string>
 
 #include "core/Project.h"

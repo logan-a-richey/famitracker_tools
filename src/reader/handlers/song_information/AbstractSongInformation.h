@@ -1,5 +1,7 @@
 // AbstractSongInformation.h
 
+#pragma once
+
 #include <string>
 
 #include "reader/handlers/BaseHandler.h"

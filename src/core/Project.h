@@ -5,11 +5,13 @@
 #include <string>
 #include <map>
 
+/* TODO
 class Macro;
 class DPCM;
 class Groove;
 class BaseInst;
 class Track;
+*/
 
 namespace famitracker {
 
@@ -28,11 +30,13 @@ namespace famitracker {
         bool vibrato;
         int namco_channels;
 
+        /* TODO
         std::map<std::string, Macro> macros;
         std::map<int, BaseInst> instruments;
         std::map<int, DPCM> dpcm_samples;
         std::map<int, Groove> grooves;
         std::map<int, Track> tracks;
+        */
     };
 
 }

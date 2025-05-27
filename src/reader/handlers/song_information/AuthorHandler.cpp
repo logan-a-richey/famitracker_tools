@@ -7,7 +7,7 @@
 
 using famitracker::reader::handler::AuthorHandler;
 
-void TitleHandler::load_data(const std::string& value, famitracker::Project& project){
+void AuthorHandler::load_data(const std::string& value, famitracker::Project& project){
     project.author = value;
 }
 

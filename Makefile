@@ -1,29 +1,33 @@
-CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -I./src -I./src/strategies -I./src/project -I./src/reader
-SRC_DIR := src
-BUILD_DIR := build
-BIN_DIR := bin
-TARGET := $(BIN_DIR)/main.exe
+# ---- Makefile ----
 
-SOURCES := $(shell find $(SRC_DIR) -name '*.cpp')
-OBJECTS := $(subst $(SRC_DIR)/,$(BUILD_DIR)/,$(SOURCES:.cpp=.o))
+CXX := g++
+CXXFLAGS := -std=c++17 -Wall -Wextra -Isrc
+
+TARGET := bin/main.exe
+BUILD_DIR := build
+SRC_DIR := src
+
+# Get all .cpp files in src
+SRC := $(shell find $(SRC_DIR) -name "*.cpp")
+# Turn each .cpp into a corresponding .o in build/
+OBJ := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRC))
 
 # Default target
 all: $(TARGET)
 
-# Link
-$(TARGET): $(OBJECTS)
-	@mkdir -p $(BIN_DIR)
+# Link final binary
+$(TARGET): $(OBJ)
+	@mkdir -p bin
 	$(CXX) $(CXXFLAGS) -o $@ $^
 
-# Compile each .cpp to .o
+# Compile source to object files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp
 	@mkdir -p $(dir $@)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 # Clean
 clean:
-	rm -rf $(BUILD_DIR) $(BIN_DIR)
+	rm -rf $(BUILD_DIR) $(TARGET)
 
 .PHONY: all clean
 

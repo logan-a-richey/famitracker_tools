@@ -1,8 +1,11 @@
 // CommentHandler.h
 
+#pragma once
+
 #include <string>
 
-#include "reader/handlers/song_information/CommentHandler.h"
+#include "reader/handlers/song_information/AbstractSongInformation.h"
+#include "core/Project.h"
 
 namespace famitracker::reader::handler {
 

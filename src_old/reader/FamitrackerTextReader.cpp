@@ -30,8 +30,9 @@ void FamitrackerTextReader::load_dispatch(){
     dispatch["AUTHOR"] = std::make_unique<AuthorStrategy>();
     dispatch["COPYRIGHT"] = std::make_unique<CopyrightStrategy>();
     dispatch["COMMENT"] = std::make_unique<CommentStrategy>();
-    /* TODO
+    
     dispatch["MACHINE"] = std::make_unique<MACHINEStrategy>();
+    /*
     dispatch["FRAMERATE"] = std::make_unique<FRAMERATEStrategy>();
     dispatch["EXPANSION"] = std::make_unique<EXPANSIONStrategy>();
     dispatch["VIBRATO"] = std::make_unique<VIBRATOStrategy>();

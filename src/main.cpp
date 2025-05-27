@@ -1,21 +1,24 @@
-// main.cpp
+// #include <iostream>
+// main.py
 
 #include <iostream>
 
-#include "project/Project.h"
-#include "reader/FamitrackerTextReader.h"
+#include "core/Project.h"
+#include "reader/TextReader.h"
 
 int main(int argc, char** argv){
-    if  (argc != 2){
-        std::cout << "Usage: ./main input.txt" << std::endl;
+    std::cout << "Hello Famitracker" << std::endl;
+    
+    if (argc != 2){
+        std::cout << "Usage: ./main.exe input.txt" << std::endl;
         return 1;
     }
     const std::string input_file = argv[1];
 
-    Project my_project;
-    FamitrackerTextReader my_text_reader;
-    
-    my_text_reader.read_file(my_project, input_file);
+    famitracker::Project my_project;
+    famitracker::reader::TextReader reader;
+    reader.read_file(input_file, my_project);
+
     my_project.print_self();
 
     return 0;

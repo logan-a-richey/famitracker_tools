@@ -1,0 +1,14 @@
+// CommentHandler.h
+
+#include <string>
+
+#include "reader/handlers/song_information/CommentHandler.h"
+
+namespace famitracker::reader::handler {
+
+    class CommentHandler : public famitracker::reader::handler::AbstractSongInformation {
+    protected:
+        void load_data(const std::string& value, famitracker::Project& project) override final;
+    };
+
+}

@@ -23,7 +23,6 @@ This project provides tools that operate directly on Famitracker's text export f
 - [ ] Unit tests: regex patterns and core module coverage
 - [ ] `AutoVibrato`: finalize auto-vibrato injection logic
 
-Finalize vibrato injection tool (auto macro placement)
 ---
 
 ## 🔧 Technical Highlights

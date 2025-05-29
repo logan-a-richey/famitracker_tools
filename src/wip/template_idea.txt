@@ -1,0 +1,80 @@
+// template_idea.txt
+
+// Idea to use templates to abstract away the verbosity of switch-case
+// However, this code was becoming hard for me to understand. 
+// I'll revisit this in the future once the parser is working!
+
+struct ILineHandler {
+public:
+    virtual void parse_line(const std::string& match, Project& project) = 0
+    virtual ~ILineHandler() = default
+};
+
+template<typename FieldType, typename WritePolicy>
+class FieldHandler : public ILineHandler {
+private:
+    FieldType Project::* field;
+public:
+    explicit FieldHandler(FieldType Project::* f): field(f) {}
+    void parse_line(const std::string& line, Project& project) override {
+        WritePolicy::apply(project.*field, value);
+    }
+};
+
+// 3. Policy for each kind of line:
+struct Impl_Song_Information {
+public:
+    static void apply(std::string& target, const std::string& value }{
+        target = value;
+    }
+};
+
+struct Impl_Comment {
+public:
+    static void apply(std::string& target, const std::string& value){
+        if (target.empty()) { target = value } 
+        else { target += "\n" + value; }
+    }
+};
+
+struct Impl_Global_Settings {
+public:
+    static void apply(std::string& target, const std::string& value){
+        target = std::stoi(value); 
+    } 
+};
+
+// TODO
+// macros
+struct Impl_Macro {};
+
+// dpcm samples
+struct Impl_Dpcm_Def {};
+struct Impl_Dpcm_Data {};
+
+// grooves
+struct Impl_Groove {};
+struct Impl_Use_Groove {};
+
+// instruments
+struct Impl_Inst_20A3 {};
+struct Impl_Inst_VRC6 {};
+struct Impl_Inst_VRC7 {};
+struct Impl_Inst_FDS {};
+struct Impl_Inst_N163 {};
+struct Impl_Inst_S5B {};
+
+// speical
+struct Impl_Key_Dpcm {};
+struct Impl_Fds_Wave {};
+struct Impl_Fds_Mod {};
+struct Impl_Fds_Macro {};
+struct Impl_N163_Wave {};
+
+// track
+struct Impl_Track {};
+struct Impl_Columns {};
+struct Impl_Order {};
+struct Impl_Pattern {};
+struct Impl_Row {};
+

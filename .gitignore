@@ -1,5 +1,6 @@
 *.exe
 .vscode
+.handlers
 input_files
 bin
 build

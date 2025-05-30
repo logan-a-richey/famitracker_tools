@@ -36,6 +36,10 @@ class Project:
             out += "{}: {}\n".format(str(it).rjust(3), val)
         out += "\n"
         
+        out += "--- DPCM Samples ---\n"
+        for it, val in enumerate(self.samples.values()):
+            out += "{}: {}\n".format(str(it).rjust(3), val)
+        
         out += "--- Instruments ---\n"
         for key, val in self.instruments.items():
             out += "{}: {}\n".format(str(key).rjust(3), val)

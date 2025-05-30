@@ -1,10 +1,20 @@
 #!/usr/bin/env python3
 
+# TODO
+#DpcmDef, DpcmData
+#Groove, UseGroove
+#KeyDpcm
+#FdsWave, FdsMod, FdsMacro
+#N163Wave
+#Track, Columns, Order, Pattern, Row
+
 import re
 from typing import Dict, List, Any
 
 from data.macro import Macro
 from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
+from data.dpcm import Dpcm
+
 
 # class Dpcm: pass
 # class KeyDpcm: pass
@@ -19,29 +29,40 @@ class Reader:
             "TITLE"         : self.handle_song_information,
             "AUTHOR"        : self.handle_song_information,
             "COPYRIGHT"     : self.handle_song_information,
+            
             "COMMENT"       : self.handle_comment,
+            
             "MACHINE"       : self.handle_global_settings,
             "FRAMERATE"     : self.handle_global_settings,
             "EXPANSION"     : self.handle_global_settings,
             "VIBRATO"       : self.handle_global_settings,
             "SPLIT"         : self.handle_global_settings,
             "N163CHANNELS"  : self.handle_global_settings,
+            
             "MACRO"         : self.handle_macro,
             "MACROVRC6"     : self.handle_macro,
             "MACRON163"     : self.handle_macro,
             "MACROS5B"      : self.handle_macro,
+            
+            "DPCMDEF"       : self.handle_dpcm_def,
+            "DPCM"          : self.handle_dpcm_data,
             "INST2A03"      : self.handle_inst_2a03,
             "INSTVRC6"      : self.handle_inst_2a03,
             "INSTS5B"       : self.handle_inst_2a03,
             "INSTN163"      : self.handle_inst_n163,
             "INSTVRC7"      : self.handle_inst_vrc7,
-            "INSTFDS"       : self.handle_inst_fds
+            "INSTFDS"       : self.handle_inst_fds,
         }
+        # private
+        self.last_dpcm_index = 0
+        self.last_pattern_index = 0
+        self.last_track_index = 0
+    
 
     def handle_song_information(self, line: str):
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            print("[W] Could not match line: {}".format(line))
             return
 
         tag = match.group(1).lower()
@@ -69,7 +90,7 @@ class Reader:
     def handle_global_settings(self, line: str):
         match = re.match(r'^\s*(\w+)\s+(\d+)$', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            print("[W] Could not match line: {}".format(line))
             return
 
         tag = match.group(1).lower()
@@ -83,7 +104,7 @@ class Reader:
     def handle_macro(self, line: str):
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            print("[W] Could not match line: {}".format(line))
             return 
 
         tag = match.group(1)
@@ -96,12 +117,33 @@ class Reader:
         
         # add macro to <Project> dictionary
         self.project.macros[_label] = myMacro 
+    
+    def handle_dpcm_def(self, line: str):
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
+        if not match:
+            print("[W] Could not match line: {}".format(line))
+            return
+        tag = match.group(1)
+        index, size = list(map(int, match.group(2, 3)))
+        name = match.group(4)
+
+        myDpcm = Dpcm(index, size, name)
+        self.project.samples[index] = myDpcm
+        self.last_dpcm_index = index
+
+    def handle_dpcm_data(self, line: str):
+        try:
+            nums = list(map(lambda x: int(x, 16), line.split(":")[1].strip().split()))
+            self.project.samples[self.last_dpcm_index].data.extend(nums)
+        except Exception as e:
+            print("[E] {} Line: {}".format(e, line))
+            return
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            print("[W] Could not match line: {}".format(line))
             return 
     
         tag = match.group(1) 
@@ -145,7 +187,7 @@ class Reader:
         # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] [name]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            print("[W] Could not match line: {}".format(line))
             return 
     
         tag = match.group(1) 
@@ -233,17 +275,8 @@ class Reader:
             for line in file:
                 self.handle_line(line.strip())
 
-#    def handle_dpcmdef(self, line: str): pass
-#    def handle_dpcm(self, line: str): pass
 #    def handle_groove(self, line: str): pass
 #    def handle_usegroove(self, line: str): pass
-
-#    def handle_inst2a03(self, line: str): pass
-#    def handle_instvrc6(self, line: str): pass
-#    def handle_instvrc7(self, line: str): pass
-#    def handle_instfds(self, line: str): pass
-#    def handle_instn163(self, line: str): pass
-#    def handle_insts5b(self, line: str): pass
 
 #    def handle_keydpcm(self, line: str): pass
 #    def handle_fdswave(self, line: str): pass

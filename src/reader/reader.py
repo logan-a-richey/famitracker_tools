@@ -13,6 +13,11 @@ from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 from data.key_dpcm import KeyDpcm
 from data.track import Track
 
+#import logging
+#logging.basicConfig(filename="newfile.log", format='%(asctime)s %(message)s', filemode='w')
+#logger = logging.getLogger()
+#logger.setLevel(logging.DEBUG)
+
 class Reader:
     def __init__(self):
         self.project = None
@@ -52,7 +57,7 @@ class Reader:
             "FDSWAVE"       : self.handle_fds_wave,
             "FDSMOD"        : self.handle_fds_mod,
             "FDSMACRO"      : self.handle_fds_macro,
-            "N163WAVE"      : self.handle_n163_wave
+            "N163WAVE"      : self.handle_n163_wave,
             
             # TODO
             "TRACK"         : self.handle_track,
@@ -71,6 +76,7 @@ class Reader:
         # TAG "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
+            #logging.warn("Could not match line: {}".format(line))
             print("[W] Could not match line: {}".format(line))
             return
 
@@ -396,9 +402,26 @@ class Reader:
         instLookup.n163_waves[wave_index] = lst
         print("Added N163 wave! {}".format(lst))
 
-    # TODO
     def handle_track(self, line: str):
-        pass
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
+        if not match:
+            print("[E] Could not match line: {}".format(line))
+            return
+        
+        tag = match.group(1)
+        num_rows, speed, tempo = list(map(int, match.group(2, 3, 4)))
+        name = match.group(5)
+
+        myTrack = Track()
+        myTrack.num_rows = num_rows
+        myTrack.speed = speed
+        myTrack.tempo = tempo
+        myTrack.name = name
+         
+        idx = myTrack.index
+        self.project.tracks[idx] = myTrack
+        print("A track was created. {}".format(myTrack))
+
 
     # TODO
     def handle_columns(self, line: str):

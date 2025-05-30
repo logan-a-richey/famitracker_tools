@@ -19,7 +19,7 @@ class Project:
         self.instruments = {} # Dict[int, <BaseInstrument>]
         self.tracks = {} # Dict[int, <Track>]
     
-    def print_self(self) -> str:
+    def __str__(self) -> str:
         out = ""
         out += "--- Song Information ---\n"
         for item in ["title", "author", "copyright"]:
@@ -54,11 +54,7 @@ class Project:
         for key, val in self.instruments.items():
             out += "{}: {}\n".format(str(key).rjust(3), val)
          
-        print(out)
         return out
-
-    def __str__(self) -> str:
-        return "{}".format(self.__dict__)
     
     def __repr__(self) -> str:
         return self.__str__()

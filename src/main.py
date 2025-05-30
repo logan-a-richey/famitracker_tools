@@ -13,7 +13,8 @@ def main():
     proj = Project()
     reader = Reader()
     reader.read_file(infile, proj)
-    proj.print_self()
+    
+    print(proj)
 
 if __name__ == "__main__":
     main()

@@ -1,5 +1,7 @@
 # macro.py
 
+from typing import List
+
 class Macro:
     @staticmethod
     def generate_macro_label(chip: str, macro_type: int, macro_index: int) -> str:

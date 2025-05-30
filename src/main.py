@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import sys
-from .dataclasses.project import Project
-from .reader.reader import Reader
-
 # stop __pyache__ from being created
 sys.dont_write_bytecode = True 
+
+from data.project import Project
+from reader.reader import Reader
 
 # main program
 def main():

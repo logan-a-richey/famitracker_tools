@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 import re
-from typing import Dict, List
+from typing import Dict, List, Any
 
-from dataclasses.macro import Macro
-from dataclasses.instruments import Inst2A03
-from 
+from data.macro import Macro
+from data.instruments import Inst2A03
+
 # class Dpcm: pass
 # class KeyDpcm: pass
 # class Groove: pass
@@ -30,6 +30,12 @@ class Reader:
             "MACROVRC6"     : self.handle_macro,
             "MACRON163"     : self.handle_macro,
             "MACROS5B"      : self.handle_macro,
+            "INST2A03"      : self.handle_inst_basic,
+            "INSTVRC6"      : self.handle_inst_basic,
+            "INSTS5B"       : self.handle_inst_basic,
+            #"INSTN163"      : self.handle_inst_n163,
+            #"INSTVRC7"      : self.handle_inst_vrc7,
+            #"INSTFDS"       : self.handle_inst_fds
         }
 
     def handle_song_information(self, line: str):
@@ -51,19 +57,14 @@ class Reader:
         if not match:
             print(f"[W] Could not match line: {line}")
             return
-
-        tag = match.group(1).lower()
+        
+        tag = match.group(1)
         val = match.group(2)
 
-        if tag != "comment":
-            print(f"[W] Unexpected tag in comment line: {tag}")
-            return
-
-        current = getattr(self.project, tag, "")
-        if current:
-            current += "\n"
-        current += val
-        setattr(self.project, tag, current)
+        if self.project.comment:
+            self.project.comment += "\n{}".format(val)
+        else:
+            self.project.comment = val
 
     def handle_global_settings(self, line: str):
         match = re.match(r'^\s*(\w+)\s+(\d+)$', line)
@@ -89,25 +90,25 @@ class Reader:
         _type, _index, _loop, _release, _setting = list(map( int, match.group(2, 3, 4, 5, 6)))
         _sequence = list(map(int, line.split(":")[1].strip().split()))
         _label = Macro.generate_macro_label(tag, _type, _index)
-        
+         
         # create <Macro>
         myMacro = Macro(_label, _type, _index, _loop, _release, _setting, _sequence)
         
         # add macro to <Project> dictionary
         self.project.macros[_label] = myMacro 
 
-    def handle_inst2a03(self, line: str):
-        match = re.match(r'\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
+    def handle_inst_basic(self, line: str):
+        # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]
+        match = re.match(r'\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$',line)
         if not match:
             print(f"[W] Could not match line: {line}")
             return 
     
-        _label = match.group(1)
-        _index
-        vol, arp, pit, hpi, dut = list(map(int, match.group(2, 3, 4, 5, 6)))
-        name = match.group(7)
+        tag = match.group(1) 
+        index, vol, arp, pit, hpi, dut = list(map(int, match.group(2, 3, 4, 5, 6, 7)))
+        name = match.group(8)
 
-        myInst = Inst2A03(_label, _index, vol, arp, pit, hpi, dut, name)
+        myInst = Inst2A03(tag, index, vol, arp, pit, hpi, dut, name)
         inst_to_macro = {
             "INST2A03": "MACRO",
             "INSTVRC6": "MACROVRC6",
@@ -137,6 +138,9 @@ class Reader:
             myInst.macro_hpi = macro_hpi_obj
         if macro_dut_obj: 
             myInst.macro_dut = macro_dut_obj
+        
+        # add <Inst2A03> to project
+        self.project.instruments[index] = myInst
 
 #*******************************************************************************
 
@@ -152,7 +156,7 @@ class Reader:
             # print(f"[W] Unknown line: {line}")
             pass
 
-    def read_file(self, infile: str, project: Project):
+    def read_file(self, infile: str, project: Any):
         self.project = project
 
         with open(infile, 'r') as file:
@@ -163,17 +167,20 @@ class Reader:
 #    def handle_dpcm(self, line: str): pass
 #    def handle_groove(self, line: str): pass
 #    def handle_usegroove(self, line: str): pass
+
 #    def handle_inst2a03(self, line: str): pass
 #    def handle_instvrc6(self, line: str): pass
 #    def handle_instvrc7(self, line: str): pass
 #    def handle_instfds(self, line: str): pass
 #    def handle_instn163(self, line: str): pass
 #    def handle_insts5b(self, line: str): pass
+
 #    def handle_keydpcm(self, line: str): pass
 #    def handle_fdswave(self, line: str): pass
 #    def handle_fdsmod(self, line: str): pass
 #    def handle_fdsmacro(self, line: str): pass
 #    def handle_n163wave(self, line: str): pass
+
 #    def handle_track(self, line: str): pass
 #    def handle_columns(self, line: str): pass
 #    def handle_order(self, line: str): pass

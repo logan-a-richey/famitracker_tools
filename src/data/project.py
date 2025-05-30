@@ -12,11 +12,12 @@ class Project:
         self.vibrato = 1
         self.split = 32
         self.n163channels = 0
-        self.macros = {}
-        self.samples = {}
-        self.grooves = {}
-        self.instruments = {}
-        self.tracks = {}
+        self.macros = {} # Dict[str, <Macro>]
+        self.samples = {} # Dict[int, <Dpcm>]
+        self.grooves = {} # Dict[int, <Groove>]
+        self.usegroove = [] # List[int]
+        self.instruments = {} # Dict[int, <BaseInstrument>]
+        self.tracks = {} # Dict[int, <Track>]
     
     def print_self(self) -> str:
         out = ""
@@ -36,9 +37,15 @@ class Project:
             out += "{}: {}\n".format(str(it).rjust(3), val)
         out += "\n"
         
+        out += "--- Grooves ---\n"
+        for groove in self.grooves.values():
+            out += "<Groove> {} : {}\n".format(groove.index, groove.sequence)
+        out += "\n"
+
         out += "--- DPCM Samples ---\n"
         for it, val in enumerate(self.samples.values()):
             out += "{}: {}\n".format(str(it).rjust(3), val)
+        if not(self.samples): out += "\n"
         
         out += "--- Instruments ---\n"
         for key, val in self.instruments.items():

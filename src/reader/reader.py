@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 # TODO
-#DpcmDef, DpcmData
-#Groove, UseGroove
 #KeyDpcm
 #FdsWave, FdsMod, FdsMacro
 #N163Wave
@@ -12,8 +10,10 @@ import re
 from typing import Dict, List, Any
 
 from data.macro import Macro
-from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 from data.dpcm import Dpcm
+from data.groove import Groove
+from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
+
 
 
 # class Dpcm: pass
@@ -46,6 +46,9 @@ class Reader:
             
             "DPCMDEF"       : self.handle_dpcm_def,
             "DPCM"          : self.handle_dpcm_data,
+            "GROOVE"        : self.handle_groove,
+            "USEGROOVE"     : self.handle_usegroove,
+            
             "INST2A03"      : self.handle_inst_2a03,
             "INSTVRC6"      : self.handle_inst_2a03,
             "INSTS5B"       : self.handle_inst_2a03,
@@ -138,6 +141,24 @@ class Reader:
         except Exception as e:
             print("[E] {} Line: {}".format(e, line))
             return
+
+    def handle_groove(self, line: str):
+        try:
+            index, size = list(map(int, line.strip().split()[1:3]))
+            sequence = list(map(int, line.split(":")[1].strip().split()))
+            myGroove = Groove(index, size, sequence)
+            self.project.grooves[index] = myGroove
+
+        except Exception as e:
+            print("[E] {} Line: {}".format(e, line))
+            return
+
+    def handle_usegroove(self, line: str):
+        try:
+            self.project.usegroove = list(map(int, line.split(":")[1].strip().split()))
+        except Exception as e:
+            print("[E] {} Line: {}".format(e, line))
+            exit(1)
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]

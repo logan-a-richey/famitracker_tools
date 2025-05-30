@@ -28,8 +28,9 @@ class Project:
         
         out += "--- Comment ---\n"
         out += "{}\n".format(self.comment)
-        out += "\n"
-        
+        if self.comment:
+            out += "\n"
+
         out += "--- Macros ---\n"
         for it, val in enumerate(self.macros.values()):
             out += "{}: {}\n".format(str(it).rjust(3), val)

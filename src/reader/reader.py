@@ -4,7 +4,7 @@ import re
 from typing import Dict, List, Any
 
 from data.macro import Macro
-from data.instruments import Inst2A03
+from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 
 # class Dpcm: pass
 # class KeyDpcm: pass
@@ -33,9 +33,9 @@ class Reader:
             "INST2A03"      : self.handle_inst_2a03,
             "INSTVRC6"      : self.handle_inst_2a03,
             "INSTS5B"       : self.handle_inst_2a03,
-            #"INSTN163"      : self.handle_inst_n163,
-            #"INSTVRC7"      : self.handle_inst_vrc7,
-            #"INSTFDS"       : self.handle_inst_fds
+            "INSTN163"      : self.handle_inst_n163,
+            "INSTVRC7"      : self.handle_inst_vrc7,
+            "INSTFDS"       : self.handle_inst_fds
         }
 
     def handle_song_information(self, line: str):
@@ -99,7 +99,7 @@ class Reader:
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]
-        match = re.match(r'\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
+        match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
             print(f"[W] Could not match line: {line}")
             return 
@@ -143,8 +143,6 @@ class Reader:
 
     def handle_inst_n163(self, line: str):
         # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] [name]
-
-         
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
             print(f"[W] Could not match line: {line}")
@@ -157,11 +155,11 @@ class Reader:
 
         myInst = InstN163(tag, index, vol, arp, pit, hpi, dut, w_size, w_pos, w_count, name)
 
-        macro_vol_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 0, vol)
-        macro_arp_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 1, arp)
-        macro_pit_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 2, pit)
-        macro_hpi_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 3, hpi)
-        macro_dut_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 4, dut)
+        macro_vol_label = Macro.generate_macro_label("MACRON163", 0, vol)
+        macro_arp_label = Macro.generate_macro_label("MACRON163", 1, arp)
+        macro_pit_label = Macro.generate_macro_label("MACRON163", 2, pit)
+        macro_hpi_label = Macro.generate_macro_label("MACRON163", 3, hpi)
+        macro_dut_label = Macro.generate_macro_label("MACRON163", 4, dut)
         
         macro_vol_obj = self.project.macros.get(macro_vol_label, None)
         macro_arp_obj = self.project.macros.get(macro_arp_label, None)
@@ -183,6 +181,36 @@ class Reader:
         # add <InstN163> to project
         self.project.instruments[index] = myInst
 
+    def handle_inst_vrc7(self, line: str):
+        # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] [name]
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$', line)
+        if not match:
+            print("[W] Could not match line: {}".format(line))
+            return
+        
+        tag = match.group(1)
+        index, patch = list(map(int, match.group(2, 3)))
+        r0, r1, r2, r3, r4, r5, r6, r7 = list(map(lambda x: int(x, 16), match.group(4, 5, 6, 7, 8, 9, 10, 11)))
+        name = match.group(12)
+        registers = [r0, r1, r2, r3, r4, r5, r6, r7]
+        myInst = InstVRC7(tag, index, patch, registers, name)
+        
+        self.project.instruments[index] = myInst
+
+    def handle_inst_fds(self, line: str):
+        # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] [name]
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
+        if not match:
+            print("[W] Could not match line: {}".format(line))
+            return
+        tag = match.group(1)
+        index, mod_enable, mod_speed, mod_depth, mod_delay = list(map(int, match.group(2, 3, 4, 5, 6)))
+        name = match.group(7)
+
+        myInst = InstFDS(tag, index, mod_enable, mod_speed, mod_depth, mod_delay, name)
+
+        self.project.instruments[index] = myInst
+        
 #*******************************************************************************
 
     def handle_line(self, line: str):
@@ -194,6 +222,7 @@ class Reader:
         if func:
             func(line)
         else:
+            # TODO
             # print(f"[W] Unknown line: {line}")
             pass
 

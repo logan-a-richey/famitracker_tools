@@ -98,7 +98,9 @@ class InstFDS:
         self.mod_depth = _mod_depth
         self.mod_delay = _mod_delay
         self.name = _name
-        
+
+        self.fds_wave: List[int] = []
+        self.fds_mod: List[int] = []
         self.macro_vol = None # <Macro>
         self.macro_arp = None
         self.macro_pit = None
@@ -110,4 +112,5 @@ class InstFDS:
         ]
         return "<{}> : [{}]".format(self.__class__.__name__, ", ".join([
             str(field) for field in fields]))
- 
+
+

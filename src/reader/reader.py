@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # TODO
-#KeyDpcm
 #FdsWave, FdsMod, FdsMacro
 #N163Wave
 #Track, Columns, Order, Pattern, Row
@@ -54,7 +53,10 @@ class Reader:
             "INSTVRC7"      : self.handle_inst_vrc7,
             "INSTFDS"       : self.handle_inst_fds,
 
-            "KEYDPCM"       : self.handle_key_dpcm
+            "KEYDPCM"       : self.handle_key_dpcm,
+            "FDSWAVE"       : self.handle_fds_wave,
+            "FDSMOD"        : self.handle_fds_mod,
+            "FDSMACRO"      : self.handle_fds_macro
         }
         # private
         self.last_dpcm_index = 0
@@ -63,6 +65,7 @@ class Reader:
     
 
     def handle_song_information(self, line: str):
+        # TAG "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -77,6 +80,7 @@ class Reader:
             print(f"[W] Unknown song info tag: {tag}")
 
     def handle_comment(self, line: str):
+        # COMMENT "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
             print(f"[W] Could not match line: {line}")
@@ -91,6 +95,7 @@ class Reader:
             self.project.comment = val
 
     def handle_global_settings(self, line: str):
+        # TAG [INT]
         match = re.match(r'^\s*(\w+)\s+(\d+)$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -105,6 +110,7 @@ class Reader:
             print(f"[W] Unknown global setting tag: {tag}")
     
     def handle_macro(self, line: str):
+        # MACRO [type] [index] [loop] [release] [setting] : [macro]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -122,6 +128,7 @@ class Reader:
         self.project.macros[_label] = myMacro 
     
     def handle_dpcm_def(self, line: str):
+        # DPCMDEF [index] [size] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -135,6 +142,7 @@ class Reader:
         self.last_dpcm_index = index
 
     def handle_dpcm_data(self, line: str):
+        # DPCM : [data]
         try:
             nums = list(map(lambda x: int(x, 16), line.split(":")[1].strip().split()))
             self.project.samples[self.last_dpcm_index].data.extend(nums)
@@ -143,6 +151,7 @@ class Reader:
             return
 
     def handle_groove(self, line: str):
+        # GROOVE [index] [sizeof] : [groove_sequence]
         try:
             index, size = list(map(int, line.strip().split()[1:3]))
             sequence = list(map(int, line.split(":")[1].strip().split()))
@@ -154,6 +163,7 @@ class Reader:
             return
 
     def handle_usegroove(self, line: str):
+        # USEGROOVE : []
         try:
             self.project.usegroove = list(map(int, line.split(":")[1].strip().split()))
         except Exception as e:
@@ -161,7 +171,7 @@ class Reader:
             exit(1)
 
     def handle_inst_2a03(self, line: str):
-        # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]
+        # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -205,7 +215,7 @@ class Reader:
         self.project.instruments[index] = myInst
 
     def handle_inst_n163(self, line: str):
-        # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] [name]
+        # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -245,7 +255,7 @@ class Reader:
         self.project.instruments[index] = myInst
 
     def handle_inst_vrc7(self, line: str):
-        # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] [name]
+        # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -261,7 +271,7 @@ class Reader:
         self.project.instruments[index] = myInst
 
     def handle_inst_fds(self, line: str):
-        # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] [name]
+        # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -275,6 +285,7 @@ class Reader:
         self.project.instruments[index] = myInst
 
     def handle_key_dpcm(self, line: str):
+        # KEYDPCM [inst] [octave] [note] [sample] [pitch] [loop] [loop_point] [delta]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$', line)
         if not match:
             print("[W] Could not match line: {}".format(line))
@@ -294,8 +305,75 @@ class Reader:
             return
         midi_pitch = octave * 12 + note
         instLookup.sample_keys[midi_pitch] = myKeyDpcm
-        # TODO
-        print("[I] Loaded KeyDPCM!")
+        #print("[DEBUG] Loaded KeyDPCM!")
+
+    def handle_fds_wave(self, line: str):
+        # FDSWAVE [inst] : [data]
+        try:
+            inst = int(line.strip().split()[1])
+            lst = list(map(int, line.split(":")[1].strip().split()))
+            instLookup = self.project.instruments.get(inst, None)            
+            if not instLookup:
+                print("[E] Could not find inst index. {}".format(line))
+                return
+            if not hasattr(instLookup, "fds_wave"):
+                print("[E] Couldn't add fds_wave to non-fds inst {}".format(line))
+                return
+            instLookup.fds_wave = lst
+        except Exception as e:
+            print("[E] {} Line: {}".format(e, line))
+            return       
+
+    def handle_fds_mod(self, line: str):
+        # FDSMOD [inst] : [data]
+        try:
+            inst = int(line.strip().split()[1])
+            lst = list(map(int, line.split(":")[1].strip().split()))
+            instLookup = self.project.instruments.get(inst, None)            
+            if not instLookup:
+                print("[E] Could not find inst index. {}".format(line))
+                return
+            if not hasattr(instLookup, "fds_mod"):
+                print("[E] Couldn't add fds_mod to non-fds inst {}".format(line))
+                return
+            instLookup.fds_mod = lst
+        except Exception as e:
+            print("[E] {} Line: {}".format(e, line))
+            return       
+
+    def handle_fds_macro(self, line: str):
+        # FDSMACRO [inst] [type] [loop] [release] [setting] : [macro]
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+([012])\s+(\-?\d+)\s+(\-?\d+)\s+(\d+)\s*\:\s*(.*)$', line)
+        if not match:
+            print("[W] Could not match line: {}".format(line))
+            return  
+        
+        tag = match.group(1)
+        _inst, _type, _loop, _release, _setting = list(map(
+            int, match.group(2, 3, 4, 5, 6)))
+        
+        instLookup = self.project.instruments.get(_inst, None)
+        if not instLookup:
+            print("[E] Could not find inst index. {}".format(line))
+
+        _sequence = list(map(int, line.split(":")[1].strip().split()))
+        label = Macro.generate_macro_label(tag, _type, 0)
+        myMacro = Macro(label, _type, 0, _loop, _release, _setting, _sequence)
+
+        target = ""
+        if _type == 0:
+            target = "macro_vol" 
+        elif _type == 1:
+            target = "macro_arp"
+        elif _type == 2:
+            target = "macro_pit"
+        else:
+            print("[E] Invalid macro type. {}".format(line))
+            return
+
+        setattr(instLookup, target, myMacro)
+        self.project.macros[label] = myMacro
+        print("[INFO] Added FDS MACRO!")
 
 #*******************************************************************************
 

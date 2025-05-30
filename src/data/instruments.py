@@ -59,7 +59,7 @@ class InstN163:
         self.macro_hpi = None
         self.macro_dut = None
 
-        self.waves: Dict[int, List[int]] = {}
+        self.n163_waves: Dict[int, List[int]] = {}
 
     def __str__(self):
         fields = [

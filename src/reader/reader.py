@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
 # TODO
-#FdsWave, FdsMod, FdsMacro
-#N163Wave
 #Track, Columns, Order, Pattern, Row
 
 import re
@@ -13,10 +11,7 @@ from data.dpcm import Dpcm
 from data.groove import Groove
 from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 from data.key_dpcm import KeyDpcm
-
-# class KeyDpcm: pass
-# class Groove: pass
-# class Track: pass
+from data.track import Track
 
 class Reader:
     def __init__(self):
@@ -56,7 +51,15 @@ class Reader:
             "KEYDPCM"       : self.handle_key_dpcm,
             "FDSWAVE"       : self.handle_fds_wave,
             "FDSMOD"        : self.handle_fds_mod,
-            "FDSMACRO"      : self.handle_fds_macro
+            "FDSMACRO"      : self.handle_fds_macro,
+            "N163WAVE"      : self.handle_n163_wave
+            
+            # TODO
+            "TRACK"         : self.handle_track,
+            "COLUMNS"       : self.handle_columns,
+            "ORDER"         : self.handle_order,
+            "PATTERN"       : self.handle_pattern,
+            "ROW"           : self.handle_row
         }
         # private
         self.last_dpcm_index = 0
@@ -373,7 +376,45 @@ class Reader:
 
         setattr(instLookup, target, myMacro)
         self.project.macros[label] = myMacro
-        print("[INFO] Added FDS MACRO!")
+        #print("[INFO] Added FDS MACRO!")
+
+    def handle_n163_wave(self, line: str):
+        # N163WAVE [inst] [wave] : [data]
+        inst_index, wave_index = list(map(int, line.strip().split()[1:3]))
+        lst = list(map(int, line.split(":")[1].strip().split()))
+
+        instLookup = self.project.instruments.get(inst_index, None)
+        if not instLookup:
+            print("[E] Failed to find N163 instrument: index {} : {}".format(
+                inst_index, line))
+            return
+        
+        if not hasattr(instLookup, "n163_waves"):
+            print("[E] Cannot add n163_wave to non-n163 instrument. {}".format(line))
+            return
+
+        instLookup.n163_waves[wave_index] = lst
+        print("Added N163 wave! {}".format(lst))
+
+    # TODO
+    def handle_track(self, line: str):
+        pass
+
+    # TODO
+    def handle_columns(self, line: str):
+        pass
+
+    # TODO
+    def handle_order(self, line: str):
+        pass
+
+    # TODO
+    def handle_pattern(self, line: str):
+        pass
+
+    # TODO
+    def handle_row(self, line: str):
+        pass
 
 #*******************************************************************************
 

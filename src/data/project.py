@@ -42,6 +42,9 @@ class Project:
             out += "<Groove> {} : {}\n".format(groove.index, groove.sequence)
         out += "\n"
 
+        out += "--- Tracks that use Default Groove ---\n"
+        out += "{}\n\n".format(self.usegroove)
+
         out += "--- DPCM Samples ---\n"
         for it, val in enumerate(self.samples.values()):
             out += "{}: {}\n".format(str(it).rjust(3), val)

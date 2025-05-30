@@ -23,7 +23,7 @@ class Project:
         out += "--- Song Information ---\n"
         for item in ["title", "author", "copyright"]:
             val = getattr(self, item)
-            out += "{}: {}\n".format(item.upper().ljust(12), val)
+            out += "{}: {}\n".format(item.upper().ljust(10), val)
         out += "\n"
         
         out += "--- Comment ---\n"
@@ -31,19 +31,13 @@ class Project:
         out += "\n"
         
         out += "--- Macros ---\n"
-        for key, val in self.macros.items():
-            #out += "{}| {}\n".format(str(key).ljust(17), val.sequence)
-            out += "{}.{} | {}\n".format(
-                
-                key.split(".")[0].rjust(10),
-                key.split(".", 1)[1].ljust(5),
-                val.sequence
-            )
+        for it, val in enumerate(self.macros.values()):
+            out += "{}: {}\n".format(str(it).rjust(3), val)
         out += "\n"
         
         out += "--- Instruments ---\n"
         for key, val in self.instruments.items():
-            out += "{}: {}\n".format(str(key).rjust(3), val.get_str())
+            out += "{}: {}\n".format(str(key).rjust(3), val)
          
         print(out)
         return out

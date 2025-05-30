@@ -30,9 +30,9 @@ class Reader:
             "MACROVRC6"     : self.handle_macro,
             "MACRON163"     : self.handle_macro,
             "MACROS5B"      : self.handle_macro,
-            "INST2A03"      : self.handle_inst_basic,
-            "INSTVRC6"      : self.handle_inst_basic,
-            "INSTS5B"       : self.handle_inst_basic,
+            "INST2A03"      : self.handle_inst_2a03,
+            "INSTVRC6"      : self.handle_inst_2a03,
+            "INSTS5B"       : self.handle_inst_2a03,
             #"INSTN163"      : self.handle_inst_n163,
             #"INSTVRC7"      : self.handle_inst_vrc7,
             #"INSTFDS"       : self.handle_inst_fds
@@ -97,9 +97,9 @@ class Reader:
         # add macro to <Project> dictionary
         self.project.macros[_label] = myMacro 
 
-    def handle_inst_basic(self, line: str):
+    def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] [name]
-        match = re.match(r'\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$',line)
+        match = re.match(r'\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
             print(f"[W] Could not match line: {line}")
             return 
@@ -112,7 +112,6 @@ class Reader:
         inst_to_macro = {
             "INST2A03": "MACRO",
             "INSTVRC6": "MACROVRC6",
-            "INSTN163": "MACRON163",
             "INSTS5B": "MACROS5B"
         }
 
@@ -140,6 +139,48 @@ class Reader:
             myInst.macro_dut = macro_dut_obj
         
         # add <Inst2A03> to project
+        self.project.instruments[index] = myInst
+
+    def handle_inst_n163(self, line: str):
+        # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] [name]
+
+         
+        match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
+        if not match:
+            print(f"[W] Could not match line: {line}")
+            return 
+    
+        tag = match.group(1) 
+        index, vol, arp, pit, hpi, dut = list(map(int, match.group(2, 3, 4, 5, 6, 7)))
+        w_size, w_pos, w_count = list(map(int, match.group(8, 9, 10)))
+        name = match.group(11)
+
+        myInst = InstN163(tag, index, vol, arp, pit, hpi, dut, w_size, w_pos, w_count, name)
+
+        macro_vol_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 0, vol)
+        macro_arp_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 1, arp)
+        macro_pit_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 2, pit)
+        macro_hpi_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 3, hpi)
+        macro_dut_label = Macro.generate_macro_label(inst_to_macro.get("MACRON163", "XYZ"), 4, dut)
+        
+        macro_vol_obj = self.project.macros.get(macro_vol_label, None)
+        macro_arp_obj = self.project.macros.get(macro_arp_label, None)
+        macro_pit_obj = self.project.macros.get(macro_pit_label, None)
+        macro_hpi_obj = self.project.macros.get(macro_hpi_label, None)
+        macro_dut_obj = self.project.macros.get(macro_dut_label, None)
+
+        if macro_vol_obj: 
+            myInst.macro_vol = macro_vol_obj
+        if macro_arp_obj: 
+            myInst.macro_arp = macro_arp_obj
+        if macro_pit_obj: 
+            myInst.macro_pit = macro_pit_obj
+        if macro_hpi_obj: 
+            myInst.macro_hpi = macro_hpi_obj
+        if macro_dut_obj: 
+            myInst.macro_dut = macro_dut_obj
+        
+        # add <InstN163> to project
         self.project.instruments[index] = myInst
 
 #*******************************************************************************

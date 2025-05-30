@@ -16,9 +16,9 @@ class Macro:
         self.release = _release
         self.setting = _setting
         self.sequence =  _sequence
-
-    def __str__(self):
-        return "{}".format(self.__dict__)
     
+    def __str__(self):
+        return "<{}> : [{}]".format(self.__class__.__name__, ", ".join([str(field) for field in [self.label, self.type, self.index, self.loop, self.release, self.setting, self.sequence]]))
+
     def __repr__(self):
         return self.__str__()

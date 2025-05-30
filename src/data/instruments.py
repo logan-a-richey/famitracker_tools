@@ -17,24 +17,9 @@ class Inst2A03:
         self.macro_hpi = None
         self.macro_dut = None
 
-    def get_str(self):
-        out = "{}| ".format("<{}>".format(self.__class__.__name__).ljust(12))
-        #out += "label = {},\t".format(self.label)
-   
-        m_spacing = 14
-        for field in ["macro_vol", "macro_arp", "macro_pit", "macro_hpi", "macro_dut"]:
-            obj = getattr(self, field)
-            if obj:
-                out += "{} = {}| ".format(field, str(obj.label).ljust(m_spacing))
-            else:
-                out += "{} = {}| ".format(field, "None".ljust(m_spacing))
+    def __str__(self):
+        return "<{}> : [{}]".format(self.__class__.__name__, ", ".join([str(field) for field in [self.label, self.index, self.seq_vol, self.seq_arp, self.seq_pit, self.seq_hpi, self.seq_dut, self.name]]))
         
-        out +="name = {}".format(self.name)
-        return out
-
-    def __str__(self) -> str:
-        return "{}".format(self.__dict__)
-    
     def __repr__(self) -> str:
         return self.__str__()
 

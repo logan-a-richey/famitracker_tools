@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+#Track 
 # TODO
-#Track, Columns, Order, Pattern, Row
+#Logging
+#Columns, Order, Pattern, Row
 
 import re
 from typing import Dict, List, Any
@@ -13,10 +15,9 @@ from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 from data.key_dpcm import KeyDpcm
 from data.track import Track
 
-#import logging
-#logging.basicConfig(filename="newfile.log", format='%(asctime)s %(message)s', filemode='w')
-#logger = logging.getLogger()
-#logger.setLevel(logging.DEBUG)
+from core.color_logger import ColorLogger
+logger = ColorLogger("Reader").get()
+logger.setLevel(ColorLogger.DEBUG)
 
 class Reader:
     def __init__(self):
@@ -76,8 +77,7 @@ class Reader:
         # TAG "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
-            #logging.warn("Could not match line: {}".format(line))
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
 
         tag = match.group(1).lower()
@@ -86,13 +86,13 @@ class Reader:
         if hasattr(self.project, tag):
             setattr(self.project, tag, val)
         else:
-            print(f"[W] Unknown song info tag: {tag}")
+            logger.warning("Unknown SongInformation tag \'{}\'".format(tag))
 
     def handle_comment(self, line: str):
         # COMMENT "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
-            print(f"[W] Could not match line: {line}")
+            logger.warning("Could not match line: {}".format(line))
             return
         
         tag = match.group(1)
@@ -107,30 +107,37 @@ class Reader:
         # TAG [INT]
         match = re.match(r'^\s*(\w+)\s+(\d+)$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
 
         tag = match.group(1).lower()
         val = int(match.group(2))
 
-        if hasattr(self.project, tag):
-            setattr(self.project, tag, val)
-        else:
-            print(f"[W] Unknown global setting tag: {tag}")
+        if not hasattr(self.project, tag):
+            logger.warning("Unknown GlobalSettings tag \'{}\'".format(tag))
+            return 
+        
+        setattr(self.project, tag, val)
     
     def handle_macro(self, line: str):
         # MACRO [type] [index] [loop] [release] [setting] : [macro]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return 
 
         tag = match.group(1)
         _type, _index, _loop, _release, _setting = list(map( int, match.group(2, 3, 4, 5, 6)))
-        _sequence = list(map(int, line.split(":")[1].strip().split()))
-        _label = Macro.generate_macro_label(tag, _type, _index)
-         
+        _int_list = match.group(7).strip().split()
+
+        try:
+            _sequence = list(map(int, _int_list))
+        except Exception as e:
+            logging.warn("Could not parse int_list in `line`: {}".format(line))
+            return
+
         # create <Macro>
+        _label = Macro.generate_macro_label(tag, _type, _index)
         myMacro = Macro(_label, _type, _index, _loop, _release, _setting, _sequence)
         
         # add macro to <Project> dictionary
@@ -140,9 +147,10 @@ class Reader:
         # DPCMDEF [index] [size] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
-        tag = match.group(1)
+        
+        tag = match.group(1) 
         index, size = list(map(int, match.group(2, 3)))
         name = match.group(4)
 
@@ -156,7 +164,7 @@ class Reader:
             nums = list(map(lambda x: int(x, 16), line.split(":")[1].strip().split()))
             self.project.samples[self.last_dpcm_index].data.extend(nums)
         except Exception as e:
-            print("[E] {} Line: {}".format(e, line))
+            logging.warn("ERROR: {} | LINE: {}".format(e, line))
             return
 
     def handle_groove(self, line: str):
@@ -168,7 +176,7 @@ class Reader:
             self.project.grooves[index] = myGroove
 
         except Exception as e:
-            print("[E] {} Line: {}".format(e, line))
+            logging.warn("ERROR: {} | LINE: {}".format(e, line))
             return
 
     def handle_usegroove(self, line: str):
@@ -176,14 +184,14 @@ class Reader:
         try:
             self.project.usegroove = list(map(int, line.split(":")[1].strip().split()))
         except Exception as e:
-            print("[E] {} Line: {}".format(e, line))
-            exit(1)
+            logging.warn("ERROR: {} | LINE: {}".format(e, line))
+            return
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return 
     
         tag = match.group(1) 
@@ -227,7 +235,7 @@ class Reader:
         # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return 
     
         tag = match.group(1) 
@@ -267,7 +275,7 @@ class Reader:
         # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
         
         tag = match.group(1)
@@ -283,8 +291,9 @@ class Reader:
         # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
+        
         tag = match.group(1)
         index, mod_enable, mod_speed, mod_depth, mod_delay = list(map(int, match.group(2, 3, 4, 5, 6)))
         name = match.group(7)
@@ -297,7 +306,7 @@ class Reader:
         # KEYDPCM [inst] [octave] [note] [sample] [pitch] [loop] [loop_point] [delta]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return
 
         inst, octave, note, sample, pitch, loop, loop_point, delta = list(map(
@@ -306,10 +315,13 @@ class Reader:
         myKeyDpcm = KeyDpcm(inst, octave, note, sample, pitch, loop, loop_point, delta)
 
         instLookup = self.project.instruments.get(inst)
+        # TODO - use isinstance instead to check if it is an Inst2A03 type with the sample_keys attr
         if not instLookup:
+            # TODO
             print("[W] Could not load KeyDpcm. Failed to find Inst index {}".format(inst))
             return
         if not hasattr(instLookup, "sample_keys"):
+            # TODO
             print("[W] Could not load KeyDpcm. Inst does not have attr \'sample_keys\'")
             return
         midi_pitch = octave * 12 + note
@@ -317,36 +329,46 @@ class Reader:
         #print("[DEBUG] Loaded KeyDPCM!")
 
     def handle_fds_wave(self, line: str):
+        # TODO - use isinstance <InstFDS> and check for its special attr
         # FDSWAVE [inst] : [data]
         try:
             inst = int(line.strip().split()[1])
             lst = list(map(int, line.split(":")[1].strip().split()))
             instLookup = self.project.instruments.get(inst, None)            
             if not instLookup:
+            # TODO
                 print("[E] Could not find inst index. {}".format(line))
                 return
             if not hasattr(instLookup, "fds_wave"):
+            # TODO
                 print("[E] Couldn't add fds_wave to non-fds inst {}".format(line))
                 return
             instLookup.fds_wave = lst
+        
         except Exception as e:
+            # TODO
             print("[E] {} Line: {}".format(e, line))
             return       
 
     def handle_fds_mod(self, line: str):
+        # TODO - use isinstance <InstFDS> and check for its special attr
         # FDSMOD [inst] : [data]
         try:
             inst = int(line.strip().split()[1])
             lst = list(map(int, line.split(":")[1].strip().split()))
             instLookup = self.project.instruments.get(inst, None)            
             if not instLookup:
+            # TODO
                 print("[E] Could not find inst index. {}".format(line))
                 return
             if not hasattr(instLookup, "fds_mod"):
+            # TODO
                 print("[E] Couldn't add fds_mod to non-fds inst {}".format(line))
                 return
             instLookup.fds_mod = lst
+        
         except Exception as e:
+            # TODO
             print("[E] {} Line: {}".format(e, line))
             return       
 
@@ -354,7 +376,7 @@ class Reader:
         # FDSMACRO [inst] [type] [loop] [release] [setting] : [macro]
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+([012])\s+(\-?\d+)\s+(\-?\d+)\s+(\d+)\s*\:\s*(.*)$', line)
         if not match:
-            print("[W] Could not match line: {}".format(line))
+            logger.warning("Could not match line: {}".format(line))
             return  
         
         tag = match.group(1)
@@ -363,6 +385,7 @@ class Reader:
         
         instLookup = self.project.instruments.get(_inst, None)
         if not instLookup:
+            # TODO
             print("[E] Could not find inst index. {}".format(line))
 
         _sequence = list(map(int, line.split(":")[1].strip().split()))
@@ -377,7 +400,7 @@ class Reader:
         elif _type == 2:
             target = "macro_pit"
         else:
-            print("[E] Invalid macro type. {}".format(line))
+            logging.warn("Invalid macro type. LINE: {}".format(line))
             return
 
         setattr(instLookup, target, myMacro)
@@ -391,11 +414,13 @@ class Reader:
 
         instLookup = self.project.instruments.get(inst_index, None)
         if not instLookup:
+            # TODO
             print("[E] Failed to find N163 instrument: index {} : {}".format(
                 inst_index, line))
             return
         
         if not hasattr(instLookup, "n163_waves"):
+            # TODO
             print("[E] Cannot add n163_wave to non-n163 instrument. {}".format(line))
             return
 
@@ -405,7 +430,7 @@ class Reader:
     def handle_track(self, line: str):
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[E] Could not match line: {}".format(line))
+            print("[E] Could not find inst index. {}".format(line))
             return
         
         tag = match.group(1)
@@ -450,9 +475,8 @@ class Reader:
         if func:
             func(line)
         else:
-            # TODO
-            # print(f"[W] Unknown line: {line}")
-            pass
+            logging.warning("Unknown line: {}".format(line))
+            return
 
     def read_file(self, infile: str, project: Any):
         self.project = project

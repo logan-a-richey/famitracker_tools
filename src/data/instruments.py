@@ -21,11 +21,13 @@ class Inst2A03:
         self.seq_dut = _dut
         self.name = _name
 
-        self.macro_vol = None
+        self.macro_vol = None # <Macro>
         self.macro_arp = None
         self.macro_pit = None
         self.macro_hpi = None
         self.macro_dut = None
+        
+        self.sample_keys = {} # Dict[int, <KeyDpcm>]
 
     def __str__(self):
         fields = [
@@ -51,7 +53,7 @@ class InstN163:
         self.seq_dut = _dut
         self.name = _name
 
-        self.macro_vol = None
+        self.macro_vol = None # <Macro>
         self.macro_arp = None
         self.macro_pit = None
         self.macro_hpi = None
@@ -96,6 +98,10 @@ class InstFDS:
         self.mod_depth = _mod_depth
         self.mod_delay = _mod_delay
         self.name = _name
+        
+        self.macro_vol = None # <Macro>
+        self.macro_arp = None
+        self.macro_pit = None
 
     def __str__(self):
         fields = [

@@ -13,10 +13,8 @@ from data.macro import Macro
 from data.dpcm import Dpcm
 from data.groove import Groove
 from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
+from data.key_dpcm import KeyDpcm
 
-
-
-# class Dpcm: pass
 # class KeyDpcm: pass
 # class Groove: pass
 # class Track: pass
@@ -55,6 +53,8 @@ class Reader:
             "INSTN163"      : self.handle_inst_n163,
             "INSTVRC7"      : self.handle_inst_vrc7,
             "INSTFDS"       : self.handle_inst_fds,
+
+            "KEYDPCM"       : self.handle_key_dpcm
         }
         # private
         self.last_dpcm_index = 0
@@ -273,7 +273,30 @@ class Reader:
         myInst = InstFDS(tag, index, mod_enable, mod_speed, mod_depth, mod_delay, name)
 
         self.project.instruments[index] = myInst
-        
+
+    def handle_key_dpcm(self, line: str):
+        match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$', line)
+        if not match:
+            print("[W] Could not match line: {}".format(line))
+            return
+
+        inst, octave, note, sample, pitch, loop, loop_point, delta = list(map(
+            int, match.group(2, 3, 4, 5, 6, 7, 8, 9)))
+
+        myKeyDpcm = KeyDpcm(inst, octave, note, sample, pitch, loop, loop_point, delta)
+
+        instLookup = self.project.instruments.get(inst)
+        if not instLookup:
+            print("[W] Could not load KeyDpcm. Failed to find Inst index {}".format(inst))
+            return
+        if not hasattr(instLookup, "sample_keys"):
+            print("[W] Could not load KeyDpcm. Inst does not have attr \'sample_keys\'")
+            return
+        midi_pitch = octave * 12 + note
+        instLookup.sample_keys[midi_pitch] = myKeyDpcm
+        # TODO
+        print("[I] Loaded KeyDPCM!")
+
 #*******************************************************************************
 
     def handle_line(self, line: str):

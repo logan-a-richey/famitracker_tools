@@ -45,10 +45,10 @@ class Project:
         out += "--- Tracks that use Default Groove ---\n"
         out += "{}\n\n".format(self.usegroove)
 
-        out += "--- DPCM Samples ---\n"
-        for it, val in enumerate(self.samples.values()):
-            out += "{}: {}\n".format(str(it).rjust(3), val)
-        if not(self.samples): out += "\n"
+#       out += "--- DPCM Samples ---\n"
+#       for it, val in enumerate(self.samples.values()):
+#           out += "{}: {}\n".format(str(it).rjust(3), val)
+#       if not(self.samples): out += "\n"
         
         out += "--- Instruments ---\n"
         for key, val in self.instruments.items():

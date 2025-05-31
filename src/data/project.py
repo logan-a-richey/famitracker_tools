@@ -20,7 +20,7 @@ class Project:
         self.tracks = {} # Dict[int, <Track>]
     
     def __str__(self) -> str:
-        out = ""
+        out = "<Project> Data:\n"
         out += "--- Song Information ---\n"
         for item in ["title", "author", "copyright"]:
             val = getattr(self, item)
@@ -53,7 +53,12 @@ class Project:
         out += "--- Instruments ---\n"
         for key, val in self.instruments.items():
             out += "{}: {}\n".format(str(key).rjust(3), val)
-         
+        out += "\n"
+        
+        out += "--- Tracks ---\n"
+        for idx, trk in self.tracks.items():
+            out += "<Track> {} : \'{}\'\n".format(idx, trk.name)
+        
         return out
     
     def __repr__(self) -> str:

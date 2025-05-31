@@ -19,7 +19,7 @@ class Track:
         # data
         self.eff_cols = [1 for i in range(self.num_cols)]
         self.orders: Dict[int, List[int]] = {}
-        self.tokens = Dict[str, str]
+        self.tokens: Dict[str, str] = {}
 
     def __str__(self):
         return "<{}> : \'{}\'".format(self.__class__.__name__, self.name)

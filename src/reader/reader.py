@@ -15,11 +15,10 @@ from core.color_logger import ColorLogger
 logger = ColorLogger("Reader").get()
 logger.setLevel(ColorLogger.DEBUG)
 
-# TODO add custom Exceptions to avoid repeating the same messages
-#class RegexFail(Exception):
 
 class Reader:
     def __init__(self):
+        # contain a reference to project
         self.project = None
 
         self.command_map = {
@@ -471,31 +470,30 @@ class Reader:
         last_track = self.project.tracks.get(self.last_track_index, None)
         if not last_track:
             raise ValueError("Tried to access null <Track>")
-        
-        # TODO - debug return
-        logger.error("ROW not implemented")
-        exit(1)
-
-        return
 
         match = re.match(r'^\s*ROW\s*([0-9A-F]{2})\s*:\s*(.*)$', line)
         if not match:
             raise ValueError("Regex failed.")
         
         row = int(match.group(1), 16)
-        tokens = [token.strip() for token in match.group(2)]
+        tokens = [token.strip() for token in match.group(2).split(":")]
+        
+        # print(row, tokens)
+         
         if len(tokens) != last_track.num_cols:
             raise ValueError("Number of Row tokens does not match Track.num_rows")
-
-        blankTokenPattern = re.compile(r'^[\.\s]$')
+        
         for col, token in enumerate(tokens):
-            blankMatch = blankTokenPattern.match(token)
+            # print(col, token)
+            blankMatch = bool(re.fullmatch(r"[. ]*", token))
             if blankMatch:
                 continue
             # TODO - put this in a helpers_function.py
             tokenKey = "PAT={}::ROW={}::COL={}".format(self.last_pattern_index, row, col)
             last_track.tokens[tokenKey] = token
-
+            
+            logger.verbose("Added tokens[\'{}\'] = \'{}\'".format(tokenKey, token))
+        
 #*******************************************************************************
 
     def handle_line(self, line: str):
@@ -510,6 +508,7 @@ class Reader:
             func(line)
         except Exception as e:
             logger.warning("{}, Line = \"{}\"".format(e, line))
+            exit(1)
 
     def read_file(self, infile: str, project: Any):
         self.project = project

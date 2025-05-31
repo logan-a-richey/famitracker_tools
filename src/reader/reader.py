@@ -15,6 +15,27 @@ from core.color_logger import ColorLogger
 logger = ColorLogger("Reader").get()
 logger.setLevel(ColorLogger.DEBUG)
 
+class RegexPatterns:
+    SONG_INFO = re.compile(r'^\s*(\w+)\s+"(.*)"$')
+    COMMENT = re.compile(r'^\s*(COMMENT)\s+"(.*)"$')
+    GLOBAL_SETTINGS = re.compile(r'^\s*(\w+)\s+(\d+)$')
+    MACRO = re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)')
+    DPCMDEF = re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$')
+    # TODO DPCM = re.compile()
+    INST2A03 = re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$')
+    INSTN163 = re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$')
+    INSTVRC7 = re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$')
+    INSTFDS = re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$')
+    KEYDPCM = re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$')
+    FDSWAVE = re.compile(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$')
+    FDSMOD =  re.compile(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$')
+    FDSMACRO = re.compile(r'^\s*(\w+)\s+(\d+)\s+([012])\s+(\-?\d+)\s+(\-?\d+)\s+(\d+)\s*\:\s*(.*)$')
+    N163WAVE = re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*:\s*(.*)$')
+    TRACK = re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$')
+    ORDER = re.compile(r'^\s*(ORDER)\s*([0-9A-F]{2})\s*:\s*(.*)$')
+    ROW = re.compile(r'^\s*ROW\s*([0-9A-F]{2})\s*:\s*(.*)$')
+    #BLANK_TOKEN = re.compile(r'[.\s]')
+    BLANK_TOKEN = re.compile(r'^[\s\.]+$')
 
 class Reader:
     def __init__(self):
@@ -64,35 +85,13 @@ class Reader:
             "ROW"           : self.handle_row
         }
         
-        self.regex_patterns = {
-            "SONG_INFO": re.compile(r'^\s*(\w+)\s+"(.*)"$'),
-            "COMMENT":re.compile(r'^\s*(COMMENT)\s+"(.*)"$'),
-            "GLOBAL_SETTINGS": re.compile(r'^\s*(\w+)\s+(\d+)$'),
-            "MACRO": re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)'),
-            "DPCMDEF": re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$'),
-            #"DPCMDATA": re.compile()
-            "INST2A03": re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$'),
-            "INSTN163": re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$'),
-            "INSTVRC7": re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$'),
-            "INSTFDS": re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$'),
-            "KEYDPCM": re.compile(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$'),
-            "FDSWAVE": re.compile(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$'),
-            "FDSMOD" : re.compile(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$'),
-            "FDSMACRO": re.compile(r'^\s*(\w+)\s+(\d+)\s+([012])\s+(\-?\d+)\s+(\-?\d+)\s+(\d+)\s*\:\s*(.*)$'),
-            "N163WAVE": re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*:\s*(.*)$'),
-            "TRACK": re.compile(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$'),
-            "ORDER": re.compile(r'^\s*(ORDER)\s*([0-9A-F]{2})\s*:\s*(.*)$'),
-            "ROW": re.compile(r'^\s*ROW\s*([0-9A-F]{2})\s*:\s*(.*)$'),
-            "BLANK_TOKEN": re.compile(r'[.\s]')
-        }
-        
         self.last_dpcm_index = 0
         self.last_pattern_index = 0
         self.last_track_index = 0
 
     def handle_song_information(self, line: str):
         # TAG "[STRING]"
-        match = self.regex_patterns["SONG_INFO"].match(line)
+        match = RegexPatterns.SONG_INFO.match(line)
         if not match:
             raise ValueError("Regex failed")
 
@@ -106,7 +105,7 @@ class Reader:
 
     def handle_comment(self, line: str):
         # COMMENT "[STRING]"
-        match = self.regex_patterns["COMMENT"].match(line)
+        match = RegexPatterns.COMMENT.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -120,7 +119,7 @@ class Reader:
 
     def handle_global_settings(self, line: str):
         # TAG [INT]
-        match = self.regex_patterns["GLOBAL_SETTINGS"].match(line)
+        match = RegexPatterns.GLOBAL_SETTINGS.match(line)
         if not match:
             raise ValueError("Regex failed")
 
@@ -134,7 +133,7 @@ class Reader:
     
     def handle_macro(self, line: str):
         # MACRO [type] [index] [loop] [release] [setting] : [macro]
-        match = self.regex_patterns["MACRO"].match(line)
+        match = RegexPatterns.MACRO.match(line)
         if not match:
             raise ValueError("Regex failed")
 
@@ -156,7 +155,7 @@ class Reader:
     
     def handle_dpcm_def(self, line: str):
         # DPCMDEF [index] [size] "[name]"
-        match = self.regex_patterns["DPCMDEF"].match(line)
+        match = RegexPatterns.DPCMDEF.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -199,7 +198,7 @@ class Reader:
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] "[name]"
-        match = self.regex_patterns["INST2A03"].match(line)
+        match = RegexPatterns.INST2A03.match(line)
         if not match:
             raise ValueError("Regex failed")
     
@@ -241,7 +240,7 @@ class Reader:
         self.project.instruments[index] = myInst
 
     def handle_inst_n163(self, line: str):
-        match = self.regex_patterns["INSTN163"].match(line)
+        match = RegexPatterns.INSTN163.match(line)
         # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] "[name]"
         if not match:
             raise ValueError("Regex failed")
@@ -281,7 +280,7 @@ class Reader:
 
     def handle_inst_vrc7(self, line: str):
         # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] "[name]"
-        match = self.regex_patterns["INSTVRC7"].match(line)
+        match = RegexPatterns.INSTVRC7.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -296,7 +295,7 @@ class Reader:
 
     def handle_inst_fds(self, line: str):
         # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] "[name]"
-        match = self.regex_patterns["INSTFDS"].match(line)
+        match = RegexPatterns.INSTFDS.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -310,7 +309,7 @@ class Reader:
 
     def handle_key_dpcm(self, line: str):
         # KEYDPCM [inst] [octave] [note] [sample] [pitch] [loop] [loop_point] [delta]
-        match = self.regex_patterns["KEYDPCM"].match(line)
+        match = RegexPatterns.KEYDPCM.match(line)
         if not match:
             raise ValueError("Regex failed")
 
@@ -329,7 +328,7 @@ class Reader:
 
     def handle_fds_wave(self, line: str):
         # FDSWAVE [inst] : [data]
-        match = self.regex_patterns["FDSWAVE"].match(line)
+        match = RegexPatterns.FDSWAVE.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -353,7 +352,7 @@ class Reader:
 
     def handle_fds_mod(self, line: str):
         # FDSMOD [inst] : [data]
-        match = self.regex_patterns["FDSMOD"].match(line)
+        match = RegexPatterns.FDSMOD.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -375,7 +374,7 @@ class Reader:
         
     def handle_fds_macro(self, line: str):
         # FDSMACRO [inst] [type] [loop] [release] [setting] : [macro]
-        match = self.regex_patterns["FDSMACRO"].match(line)
+        match = RegexPatterns.FDSMACRO.match(line)
         if not match:
             raise ValueError("Regex failed.")
         
@@ -410,7 +409,7 @@ class Reader:
 
     def handle_n163_wave(self, line: str):
         # N163WAVE [inst] [wave] : [data]
-        match = self.regex_patterns["N163WAVE"].match(line)
+        match = RegexPatterns.N163WAVE.match(line)
         if not match:
             raise ValueError("Regex failed.")
 
@@ -430,7 +429,7 @@ class Reader:
 
     def handle_track(self, line: str):
         # TRACK [pattern] [speed] [tempo] [name]
-        match = self.regex_patterns["TRACK"].match(line)
+        match = RegexPatterns.TRACK.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -467,7 +466,7 @@ class Reader:
         if not last_track:
             raise ValueError("Tried to access null <Track>")
         
-        match = self.regex_patterns["ORDER"].match(line)
+        match = RegexPatterns.ORDER.match(line)
         if not match:
             raise ValueError("Regex failed")
         
@@ -493,7 +492,7 @@ class Reader:
         if not last_track:
             raise ValueError("Tried to access null <Track>")
 
-        match = self.regex_patterns["ROW"].match(line)
+        match = RegexPatterns.ROW.match(line)
         if not match:
             raise ValueError("Regex failed.")
         
@@ -507,7 +506,8 @@ class Reader:
         
         for col, token in enumerate(tokens):
             # print(col, token)
-            blankMatch = self.regex_patterns["BLANK_TOKEN"].fullmatch(token)
+            # TODO
+            blankMatch = RegexPatterns.BLANK_TOKEN.match(token)
             if blankMatch:
                 continue
             # TODO - put this in a helpers_function.py

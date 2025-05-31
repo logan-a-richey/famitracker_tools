@@ -8,7 +8,7 @@ from reader.reader import Reader
 
 from core.color_logger import ColorLogger
 logger = ColorLogger("Main").get()
-logger.setLevel(ColorLogger.VERBOSE_LEVEL)
+logger.setLevel(ColorLogger.INFO)
 
 # main program
 def main():
@@ -22,7 +22,7 @@ def main():
     reader = Reader()
     reader.read_file(infile, proj)
     
-    logger.verbose(proj)
+    logger.debug(proj)
     logger.info("Program ran successfully.")
 
 if __name__ == "__main__":

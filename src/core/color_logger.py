@@ -6,7 +6,8 @@ import sys
 import os
 
 class ColorFormatter(logging.Formatter):
-    base_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+    # base_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
+    base_format = "[%(levelname)s] - %(message)s (%(filename)s:%(lineno)d)"
 
     def __init__(self, colors=None):
         super().__init__(self.base_format)

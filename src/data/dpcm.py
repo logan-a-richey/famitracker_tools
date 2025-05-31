@@ -1,5 +1,7 @@
 # dpcm.py
 
+from typing import List
+
 class Dpcm:
     def __init__(self, _index: int, _size: int, _name):
         self.index = _index

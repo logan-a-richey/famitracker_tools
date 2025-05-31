@@ -15,6 +15,7 @@ from core.color_logger import ColorLogger
 logger = ColorLogger("Reader").get()
 logger.setLevel(ColorLogger.DEBUG)
 
+
 class RegexPatterns:
     SONG_INFO = re.compile(r'^\s*(\w+)\s+"(.*)"$')
     COMMENT = re.compile(r'^\s*(COMMENT)\s+"(.*)"$')
@@ -510,6 +511,7 @@ class Reader:
             blankMatch = RegexPatterns.BLANK_TOKEN.match(token)
             if blankMatch:
                 continue
+            
             # TODO - put this in a helpers_function.py
             tokenKey = "PAT={}::ROW={}::COL={}".format(self.last_pattern_index, row, col)
             last_track.tokens[tokenKey] = token
@@ -526,11 +528,13 @@ class Reader:
         func = self.command_map.get(first_word, None)
         if not func:
             logger.warning("Unknown Tag \"{}\", Line: {}".format(line.split()[0], line))
+            return
+
         try:
             func(line)
         except Exception as e:
             logger.warning("{}, Line = \"{}\"".format(e, line))
-            exit(1)
+            sys.exit(1)
 
     def read_file(self, infile: str, project: Any):
         self.project = project
@@ -540,11 +544,11 @@ class Reader:
                     self.handle_line(line.strip())
         except FileNotFoundError:
             logger.error("File not found.")
-            sys.exit()
+            sys.exit(1)
         except IOError as e:
             logging.error("Error: An I/O error occurred: {}".format(e))
-            sys.exit()
+            sys.exit(1)
         except Exception as e:
             logging.error("An unexpected error occured: {}".format(e))
-            sys.exit()
+            sys.exit(1)
         

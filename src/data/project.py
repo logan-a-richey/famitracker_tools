@@ -1,5 +1,7 @@
 # project.py
 
+from typing import Dict, List
+
 class Project:
     def __init__(self):
         self.title = ""
@@ -12,12 +14,12 @@ class Project:
         self.vibrato = 1
         self.split = 32
         self.n163channels = 0
-        self.macros = {} # Dict[str, <Macro>]
-        self.samples = {} # Dict[int, <Dpcm>]
-        self.grooves = {} # Dict[int, <Groove>]
-        self.usegroove = [] # List[int]
-        self.instruments = {} # Dict[int, <BaseInstrument>]
-        self.tracks = {} # Dict[int, <Track>]
+        self.macros: Dict[str, object] = {} 
+        self.samples: Dict[int, object] = {} 
+        self.grooves: Dict[int, object] = {} 
+        self.usegroove: List[int] = [] 
+        self.instruments: Dict[int, object] = {} 
+        self.tracks: Dict[int, object] = {} 
     
     def __str__(self) -> str:
         out = "<Project> Data:\n"

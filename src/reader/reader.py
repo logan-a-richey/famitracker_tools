@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
 
-#Track 
-# TODO
-#Logging
-#Columns, Order, Pattern, Row
-
 import re
+import sys
 from typing import Dict, List, Any
 
 from data.macro import Macro
@@ -19,6 +15,9 @@ from core.color_logger import ColorLogger
 logger = ColorLogger("Reader").get()
 logger.setLevel(ColorLogger.DEBUG)
 
+# TODO add custom Exceptions to avoid repeating the same messages
+#class RegexFail(Exception):
+
 class Reader:
     def __init__(self):
         self.project = None
@@ -27,7 +26,6 @@ class Reader:
             "TITLE"         : self.handle_song_information,
             "AUTHOR"        : self.handle_song_information,
             "COPYRIGHT"     : self.handle_song_information,
-            
             "COMMENT"       : self.handle_comment,
             
             "MACHINE"       : self.handle_global_settings,
@@ -60,40 +58,36 @@ class Reader:
             "FDSMACRO"      : self.handle_fds_macro,
             "N163WAVE"      : self.handle_n163_wave,
             
-            # TODO
             "TRACK"         : self.handle_track,
             "COLUMNS"       : self.handle_columns,
             "ORDER"         : self.handle_order,
             "PATTERN"       : self.handle_pattern,
             "ROW"           : self.handle_row
         }
-        # private
+        
         self.last_dpcm_index = 0
         self.last_pattern_index = 0
         self.last_track_index = 0
-    
 
     def handle_song_information(self, line: str):
         # TAG "[STRING]"
         match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
 
         tag = match.group(1).lower()
         val = match.group(2)
 
-        if hasattr(self.project, tag):
-            setattr(self.project, tag, val)
-        else:
-            logger.warning("Unknown SongInformation tag \'{}\'".format(tag))
+        if not hasattr(self.project, tag):
+            raise ValueError("Invalid SongInformation tag \"{}\"".format(tag))
+        
+        setattr(self.project, tag, val)
 
     def handle_comment(self, line: str):
         # COMMENT "[STRING]"
-        match = re.match(r'^\s*(\w+)\s+"(.*)"$', line)
+        match = re.match(r'^\s*(COMMENT)\s+"(.*)"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
         
         tag = match.group(1)
         val = match.group(2)
@@ -107,15 +101,13 @@ class Reader:
         # TAG [INT]
         match = re.match(r'^\s*(\w+)\s+(\d+)$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
 
         tag = match.group(1).lower()
         val = int(match.group(2))
 
         if not hasattr(self.project, tag):
-            logger.warning("Unknown GlobalSettings tag \'{}\'".format(tag))
-            return 
+            raise ValueError("Invalid GlobalSettings tag \"{}\"".format(tag))
         
         setattr(self.project, tag, val)
     
@@ -123,8 +115,7 @@ class Reader:
         # MACRO [type] [index] [loop] [release] [setting] : [macro]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\:\s*(.*)', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return 
+            raise ValueError("Regex failed")
 
         tag = match.group(1)
         _type, _index, _loop, _release, _setting = list(map( int, match.group(2, 3, 4, 5, 6)))
@@ -133,8 +124,7 @@ class Reader:
         try:
             _sequence = list(map(int, _int_list))
         except Exception as e:
-            logging.warn("Could not parse int_list in `line`: {}".format(line))
-            return
+            raise ValueError("Could not parse IntList")
 
         # create <Macro>
         _label = Macro.generate_macro_label(tag, _type, _index)
@@ -147,8 +137,7 @@ class Reader:
         # DPCMDEF [index] [size] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
         
         tag = match.group(1) 
         index, size = list(map(int, match.group(2, 3)))
@@ -160,14 +149,15 @@ class Reader:
 
     def handle_dpcm_data(self, line: str):
         # DPCM : [data]
+        # TODO regex for better checking
         try:
             nums = list(map(lambda x: int(x, 16), line.split(":")[1].strip().split()))
             self.project.samples[self.last_dpcm_index].data.extend(nums)
         except Exception as e:
-            logging.warn("ERROR: {} | LINE: {}".format(e, line))
-            return
+            raise ValueError("Could not parse HexList")
 
     def handle_groove(self, line: str):
+        # TODO - regex for better checking
         # GROOVE [index] [sizeof] : [groove_sequence]
         try:
             index, size = list(map(int, line.strip().split()[1:3]))
@@ -176,23 +166,21 @@ class Reader:
             self.project.grooves[index] = myGroove
 
         except Exception as e:
-            logging.warn("ERROR: {} | LINE: {}".format(e, line))
-            return
+            raise ValueError("Could not parse IntList")
 
     def handle_usegroove(self, line: str):
+        # TODO - regex for better checking
         # USEGROOVE : []
         try:
             self.project.usegroove = list(map(int, line.split(":")[1].strip().split()))
         except Exception as e:
-            logging.warn("ERROR: {} | LINE: {}".format(e, line))
-            return
+            raise ValueError("Could not parse IntList")
 
     def handle_inst_2a03(self, line: str):
         # INST2A03 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_dut] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return 
+            raise ValueError("Regex failed")
     
         tag = match.group(1) 
         index, vol, arp, pit, hpi, dut = list(map(int, match.group(2, 3, 4, 5, 6, 7)))
@@ -235,9 +223,8 @@ class Reader:
         # INSTN163 [index] [seq_vol] [seq_arp] [seq_pit] [seq_hpi] [seq_wav] [w_size] [w_pos] [w_count] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s*\"(.*)\"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return 
-    
+            raise ValueError("Regex failed")
+
         tag = match.group(1) 
         index, vol, arp, pit, hpi, dut = list(map(int, match.group(2, 3, 4, 5, 6, 7)))
         w_size, w_pos, w_count = list(map(int, match.group(8, 9, 10)))
@@ -275,8 +262,7 @@ class Reader:
         # INSTVRC7 [index] [patch] [r0] [r1] [r2] [r3] [r4] [r5] [r6] [r7] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s+([0-9A-F]{2})\s*\"(.*)\"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
         
         tag = match.group(1)
         index, patch = list(map(int, match.group(2, 3)))
@@ -291,8 +277,7 @@ class Reader:
         # INSTFDS [index] [mod_enable] [mod_speed] [mod_depth] [mod_delay] "[name]"
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
         
         tag = match.group(1)
         index, mod_enable, mod_speed, mod_depth, mod_delay = list(map(int, match.group(2, 3, 4, 5, 6)))
@@ -306,8 +291,7 @@ class Reader:
         # KEYDPCM [inst] [octave] [note] [sample] [pitch] [loop] [loop_point] [delta]
         match = re.match(r'^\s*(\w+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)\s+(\-?\d+)$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return
+            raise ValueError("Regex failed")
 
         inst, octave, note, sample, pitch, loop, loop_point, delta = list(map(
             int, match.group(2, 3, 4, 5, 6, 7, 8, 9)))
@@ -315,69 +299,64 @@ class Reader:
         myKeyDpcm = KeyDpcm(inst, octave, note, sample, pitch, loop, loop_point, delta)
 
         instLookup = self.project.instruments.get(inst)
-        # TODO - use isinstance instead to check if it is an Inst2A03 type with the sample_keys attr
-        if not instLookup:
-            # TODO
-            print("[W] Could not load KeyDpcm. Failed to find Inst index {}".format(inst))
-            return
-        if not hasattr(instLookup, "sample_keys"):
-            # TODO
-            print("[W] Could not load KeyDpcm. Inst does not have attr \'sample_keys\'")
-            return
+        
+        if not isinstance(instLookup, Inst2A03):
+            raise ValueError("`instLookup` is not type <Inst2A03>")
+
         midi_pitch = octave * 12 + note
         instLookup.sample_keys[midi_pitch] = myKeyDpcm
-        #print("[DEBUG] Loaded KeyDPCM!")
 
     def handle_fds_wave(self, line: str):
-        # TODO - use isinstance <InstFDS> and check for its special attr
         # FDSWAVE [inst] : [data]
-        try:
-            inst = int(line.strip().split()[1])
-            lst = list(map(int, line.split(":")[1].strip().split()))
-            instLookup = self.project.instruments.get(inst, None)            
-            if not instLookup:
-            # TODO
-                print("[E] Could not find inst index. {}".format(line))
-                return
-            if not hasattr(instLookup, "fds_wave"):
-            # TODO
-                print("[E] Couldn't add fds_wave to non-fds inst {}".format(line))
-                return
-            instLookup.fds_wave = lst
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$', line)
+        if not match:
+            raise ValueError("Regex failed")
         
-        except Exception as e:
-            # TODO
-            print("[E] {} Line: {}".format(e, line))
-            return       
+        # tag = match.group(1)
+        inst = int(match.group(2))
+        
+        try:
+            lst = list(map(int, match.group(3).strip().split()))
+        except:
+            raise ValueError("Failed to parse List[int]")
+        
+        instLookup = self.project.instruments.get(inst, None)            
+        
+        if not instLookup:
+            raise ValueError("Could not find Instrument index {}".format(inst))
+        
+        if not isinstance(instLookup, InstFDS):
+            raise ValueError("`instLookup` is not of type <InstFDS>")
+
+        instLookup.fds_wave = lst
 
     def handle_fds_mod(self, line: str):
-        # TODO - use isinstance <InstFDS> and check for its special attr
         # FDSMOD [inst] : [data]
-        try:
-            inst = int(line.strip().split()[1])
-            lst = list(map(int, line.split(":")[1].strip().split()))
-            instLookup = self.project.instruments.get(inst, None)            
-            if not instLookup:
-            # TODO
-                print("[E] Could not find inst index. {}".format(line))
-                return
-            if not hasattr(instLookup, "fds_mod"):
-            # TODO
-                print("[E] Couldn't add fds_mod to non-fds inst {}".format(line))
-                return
-            instLookup.fds_mod = lst
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s*:\s*(.*)$', line)
+        if not match:
+            raise ValueError("Regex failed")
         
-        except Exception as e:
-            # TODO
-            print("[E] {} Line: {}".format(e, line))
-            return       
+        # tag = match.group(1)
+        inst = int(match.group(2))
+        try:
+            lst = list(map(int, match.group(3).strip().split()))
+        except:
+            raise ValueError("Could not parse List[int]")
 
+        instLookup = self.project.instruments.get(inst, None)            
+        if not instLookup:
+            raise ValueError("Could not find Instrument index {}".format(inst))
+        
+        if not isinstance(instLookup, InstFDS):
+            raise ValueError("`instLookup` is not of type <InstFDS>")
+
+        instLookup.fds_mod = lst
+        
     def handle_fds_macro(self, line: str):
         # FDSMACRO [inst] [type] [loop] [release] [setting] : [macro]
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+([012])\s+(\-?\d+)\s+(\-?\d+)\s+(\d+)\s*\:\s*(.*)$', line)
         if not match:
-            logger.warning("Could not match line: {}".format(line))
-            return  
+            raise ValueError("Regex failed.")
         
         tag = match.group(1)
         _inst, _type, _loop, _release, _setting = list(map(
@@ -385,10 +364,13 @@ class Reader:
         
         instLookup = self.project.instruments.get(_inst, None)
         if not instLookup:
-            # TODO
-            print("[E] Could not find inst index. {}".format(line))
+            raise ValueError("Could not find Instrument index {}".format(inst))
+        
+        try:
+            _sequence = list(map(int, match.group(7).strip().split()))
+        except Exception as e:
+            raise ValueError("Could not parse List[int]")
 
-        _sequence = list(map(int, line.split(":")[1].strip().split()))
         label = Macro.generate_macro_label(tag, _type, 0)
         myMacro = Macro(label, _type, 0, _loop, _release, _setting, _sequence)
 
@@ -400,69 +382,119 @@ class Reader:
         elif _type == 2:
             target = "macro_pit"
         else:
-            logging.warn("Invalid macro type. LINE: {}".format(line))
-            return
+            raise ValueError("Invalid macro type: {}".format(_type))
 
         setattr(instLookup, target, myMacro)
         self.project.macros[label] = myMacro
-        #print("[INFO] Added FDS MACRO!")
 
     def handle_n163_wave(self, line: str):
         # N163WAVE [inst] [wave] : [data]
-        inst_index, wave_index = list(map(int, line.strip().split()[1:3]))
-        lst = list(map(int, line.split(":")[1].strip().split()))
+        match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s*:\s*(.*)$', line)
+        if not match:
+            raise ValueError("Regex failed.")
+
+        tag = match.group(1)
+        inst_index, wave_index = list(map(int, match.group(2, 3)))
+        lst = list(map(int, match.group(4).strip().split()))
 
         instLookup = self.project.instruments.get(inst_index, None)
-        if not instLookup:
-            # TODO
-            print("[E] Failed to find N163 instrument: index {} : {}".format(
-                inst_index, line))
-            return
         
-        if not hasattr(instLookup, "n163_waves"):
-            # TODO
-            print("[E] Cannot add n163_wave to non-n163 instrument. {}".format(line))
-            return
+        if not instLookup:
+            raise ValueError("Failed to find Instrument {}".format(inst_index))
+        
+        if not isinstance(instLookup, InstN163):
+            raise ValueError("instLookup is not of type <InstN163>")
 
         instLookup.n163_waves[wave_index] = lst
-        print("Added N163 wave! {}".format(lst))
 
     def handle_track(self, line: str):
+        # TRACK [pattern] [speed] [tempo] [name]
         match = re.match(r'^\s*(\w+)\s+(\d+)\s+(\d+)\s+(\d+)\s*\"(.*)\"$', line)
         if not match:
-            print("[E] Could not find inst index. {}".format(line))
-            return
+            raise ValueError("Regex failed")
         
         tag = match.group(1)
         num_rows, speed, tempo = list(map(int, match.group(2, 3, 4)))
         name = match.group(5)
 
         myTrack = Track()
+        
         myTrack.num_rows = num_rows
         myTrack.speed = speed
         myTrack.tempo = tempo
         myTrack.name = name
          
-        idx = myTrack.index
-        self.project.tracks[idx] = myTrack
-        print("A track was created. {}".format(myTrack))
+        self.project.tracks[myTrack.index] = myTrack
+        self.last_track_index = myTrack.index
 
-
-    # TODO
     def handle_columns(self, line: str):
-        pass
+        # COLUMNS : [columns]
+        last_track = self.project.tracks.get(self.last_track_index, None)
+        if not last_track:
+            raise ValueError("Tried to access null <Track>")
 
-    # TODO
+        try:
+            lst = list(map(int, line.split(":")[1].strip().split()))
+            last_track.num_cols = len(lst)
+            last_track.eff_cols = lst
+        except Exception as e:
+            raise ValueError("Could not parse List[int]")
+
     def handle_order(self, line: str):
-        pass
+        # ORDER [frame] : [list]
+        last_track = self.project.tracks.get(self.last_track_index, None)
+        if not last_track:
+            raise ValueError("Tried to access null <Track>")
+        
+        match = re.match(r'^\s*(ORDER)\s*([0-9A-F]{2})\s*:\s*(.*)$', line)
+        if not match:
+            raise ValueError("Regex failed")
+        
+        # TODO error checking
+        tag = match.group(1)
+        idx = int(match.group(2), 16)
+        lst = list(map(lambda x: int(x, 16), match.group(3).strip().split()))
 
-    # TODO
+        last_track.orders[idx] = lst
+
     def handle_pattern(self, line: str):
-        pass
-
+        # PATTERN [pattern]
+        try:
+            idx = int(line.strip().split()[1], 16)
+            self.last_pattern_index = idx
+        except:
+            raise ValueError("Could not get Pattern index.")
+       
     # TODO
     def handle_row(self, line: str):
-        pass
+        # ROW [row] : [c0] : [c1] : [c2] ...
+        last_track = self.project.tracks.get(self.last_track_index, None)
+        if not last_track:
+            raise ValueError("Tried to access null <Track>")
+        
+        # TODO - debug return
+        logger.error("ROW not implemented")
+        exit(1)
+
+        return
+
+        match = re.match(r'^\s*ROW\s*([0-9A-F]{2})\s*:\s*(.*)$', line)
+        if not match:
+            raise ValueError("Regex failed.")
+        
+        row = int(match.group(1), 16)
+        tokens = [token.strip() for token in match.group(2)]
+        if len(tokens) != last_track.num_cols:
+            raise ValueError("Number of Row tokens does not match Track.num_rows")
+
+        blankTokenPattern = re.compile(r'^[\.\s]$')
+        for col, token in enumerate(tokens):
+            blankMatch = blankTokenPattern.match(token)
+            if blankMatch:
+                continue
+            # TODO - put this in a helpers_function.py
+            tokenKey = "PAT={}::ROW={}::COL={}".format(self.last_pattern_index, row, col)
+            last_track.tokens[tokenKey] = token
 
 #*******************************************************************************
 
@@ -472,31 +504,26 @@ class Reader:
 
         first_word = line.split()[0]
         func = self.command_map.get(first_word, None)
-        if func:
+        if not func:
+            logger.warning("Unknown Tag \"{}\", Line: {}".format(line.split()[0], line))
+        try:
             func(line)
-        else:
-            logging.warning("Unknown line: {}".format(line))
-            return
+        except Exception as e:
+            logger.warning("{}, Line = \"{}\"".format(e, line))
 
     def read_file(self, infile: str, project: Any):
         self.project = project
-
-        with open(infile, 'r') as file:
-            for line in file:
-                self.handle_line(line.strip())
-
-#    def handle_groove(self, line: str): pass
-#    def handle_usegroove(self, line: str): pass
-
-#    def handle_keydpcm(self, line: str): pass
-#    def handle_fdswave(self, line: str): pass
-#    def handle_fdsmod(self, line: str): pass
-#    def handle_fdsmacro(self, line: str): pass
-#    def handle_n163wave(self, line: str): pass
-
-#    def handle_track(self, line: str): pass
-#    def handle_columns(self, line: str): pass
-#    def handle_order(self, line: str): pass
-#    def handle_pattern(self, line: str): pass
-#    def handle_row(self, line: str): pass
-
+        try:
+            with open(infile, 'r') as file:
+                for line in file:
+                    self.handle_line(line.strip())
+        except FileNotFoundError:
+            logger.error("File not found.")
+            sys.exit()
+        except IOError as e:
+            logging.error("Error: An I/O error occurred: {}".format(e))
+            sys.exit()
+        except Exception as e:
+            logging.error("An unexpected error occured: {}".format(e))
+            sys.exit()
+        

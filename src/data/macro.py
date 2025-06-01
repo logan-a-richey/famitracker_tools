@@ -3,10 +3,6 @@
 from typing import List
 
 class Macro:
-    @staticmethod
-    def generate_macro_label(chip: str, macro_type: int, macro_index: int) -> str:
-        ''' chip is either MACRO, MACROVRC6, MACRON163, MACROSB5 '''
-        return "{}.{}.{}".format(chip, macro_type, macro_index)
 
     def __init__(self, _label: str, _type: int, _index: int, _loop: int, _release: int, _setting: int, _sequence: List[int]):
         self.label = _label

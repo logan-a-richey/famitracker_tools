@@ -16,6 +16,7 @@ from utils.reader import Reader
 from utils.track_formatter import TrackFormatter
 from utils.midi_exporter import MidiExporter
 
+#*******************************************************************************
 # main program
 def main():
     try:

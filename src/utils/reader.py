@@ -11,6 +11,9 @@ from data.instruments import Inst2A03, InstN163, InstVRC7, InstFDS
 from data.key_dpcm import KeyDpcm
 from data.track import Track
 
+from utils.helpers import generate_macro_label
+from utils.helpers import get_token_key
+
 from core.color_logger import ColorLogger
 logger = ColorLogger("Reader").get()
 logger.setLevel(ColorLogger.DEBUG)
@@ -148,7 +151,7 @@ class Reader:
             raise ValueError("Could not parse IntList")
 
         # create <Macro>
-        _label = Macro.generate_macro_label(tag, _type, _index)
+        _label = generate_macro_label(tag, _type, _index)
         myMacro = Macro(_label, _type, _index, _loop, _release, _setting, _sequence)
         
         # add macro to <Project> dictionary
@@ -214,11 +217,11 @@ class Reader:
             "INSTS5B": "MACROS5B"
         }
 
-        macro_vol_label = Macro.generate_macro_label(inst_to_macro.get(tag, "XYZ"), 0, vol)
-        macro_arp_label = Macro.generate_macro_label(inst_to_macro.get(tag, "XYZ"), 1, arp)
-        macro_pit_label = Macro.generate_macro_label(inst_to_macro.get(tag, "XYZ"), 2, pit)
-        macro_hpi_label = Macro.generate_macro_label(inst_to_macro.get(tag, "XYZ"), 3, hpi)
-        macro_dut_label = Macro.generate_macro_label(inst_to_macro.get(tag, "XYZ"), 4, dut)
+        macro_vol_label = generate_macro_label(inst_to_macro.get(tag, "XYZ"), 0, vol)
+        macro_arp_label = generate_macro_label(inst_to_macro.get(tag, "XYZ"), 1, arp)
+        macro_pit_label = generate_macro_label(inst_to_macro.get(tag, "XYZ"), 2, pit)
+        macro_hpi_label = generate_macro_label(inst_to_macro.get(tag, "XYZ"), 3, hpi)
+        macro_dut_label = generate_macro_label(inst_to_macro.get(tag, "XYZ"), 4, dut)
         
         macro_vol_obj = self.project.macros.get(macro_vol_label, None)
         macro_arp_obj = self.project.macros.get(macro_arp_label, None)
@@ -253,11 +256,11 @@ class Reader:
 
         myInst = InstN163(tag, index, vol, arp, pit, hpi, dut, w_size, w_pos, w_count, name)
 
-        macro_vol_label = Macro.generate_macro_label("MACRON163", 0, vol)
-        macro_arp_label = Macro.generate_macro_label("MACRON163", 1, arp)
-        macro_pit_label = Macro.generate_macro_label("MACRON163", 2, pit)
-        macro_hpi_label = Macro.generate_macro_label("MACRON163", 3, hpi)
-        macro_dut_label = Macro.generate_macro_label("MACRON163", 4, dut)
+        macro_vol_label = generate_macro_label("MACRON163", 0, vol)
+        macro_arp_label = generate_macro_label("MACRON163", 1, arp)
+        macro_pit_label = generate_macro_label("MACRON163", 2, pit)
+        macro_hpi_label = generate_macro_label("MACRON163", 3, hpi)
+        macro_dut_label = generate_macro_label("MACRON163", 4, dut)
         
         macro_vol_obj = self.project.macros.get(macro_vol_label, None)
         macro_arp_obj = self.project.macros.get(macro_arp_label, None)
@@ -392,7 +395,7 @@ class Reader:
         except Exception as e:
             raise ValueError("Could not parse List[int]")
 
-        label = Macro.generate_macro_label(tag, _type, 0)
+        label = generate_macro_label(tag, _type, 0)
         myMacro = Macro(label, _type, 0, _loop, _release, _setting, _sequence)
 
         target = ""
@@ -488,6 +491,7 @@ class Reader:
        
     # TODO
     def handle_row(self, line: str):
+        # ROW = re.compile(r'^\s*ROW\s*([0-9A-F]{2})\s*:\s*(.*)$')
         # ROW [row] : [c0] : [c1] : [c2] ...
         last_track = self.project.tracks.get(self.last_track_index, None)
         if not last_track:
@@ -499,23 +503,17 @@ class Reader:
         
         row = int(match.group(1), 16)
         tokens = [token.strip() for token in match.group(2).split(":")]
-        
-        # print(row, tokens)
-         
+
         if len(tokens) != last_track.num_cols:
             raise ValueError("Number of Row tokens does not match Track.num_rows")
         
         for col, token in enumerate(tokens):
-            # print(col, token)
-            # TODO
             blankMatch = RegexPatterns.BLANK_TOKEN.match(token)
             if blankMatch:
                 continue
             
-            # TODO - put this in a helpers_function.py
-            tokenKey = "PAT={}::ROW={}::COL={}".format(self.last_pattern_index, row, col)
+            tokenKey = get_token_key(self.last_pattern_index, row, col)
             last_track.tokens[tokenKey] = token
-            
             logger.verbose("Added tokens[\'{}\'] = \'{}\'".format(tokenKey, token))
         
 #*******************************************************************************
@@ -533,7 +531,7 @@ class Reader:
         try:
             func(line)
         except Exception as e:
-            logger.warning("{}, Line = \"{}\"".format(e, line))
+            logger.warning("{}, Line = \"{}\"".format(e, line), exc_info=True)
             sys.exit(1)
 
     def read_file(self, infile: str, project: Any):

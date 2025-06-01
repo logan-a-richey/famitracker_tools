@@ -11,9 +11,11 @@ This project provides tools that operate directly on Famitracker's text export f
 * Provide a clean, extensible codebase suitable for showcasing software engineering skills and for building additional features.
 
 ## Roadmap
-[!NOTE]
-This is a work in progress. Features incomplete, active development ongoing.
+> [!NOTE]
+> This is a work in progress. Features incomplete, active development ongoing.
+
 <br>
+
 Python Version:
 - [x] Reader
 - [x] TrackFormatter
@@ -24,9 +26,11 @@ Python Version:
 - [ ] Add additional Logging
 - [ ] Add additional Error Handling
 - [ ] Add Unit Testing Regex pattern 
+
 <br>
+
 C++ Version:
-* Refactor coming soon. I decided that the Gang-Of-Four approach may be too much for a simple text parser. Considering a map of lambda functions instead.
+- [ ] Refactor coming soon. I decided that the Gang-Of-Four approach may be too much for a simple text parser. Considering a map of lambda functions instead.
 
 ---
 

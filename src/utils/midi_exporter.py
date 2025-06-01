@@ -5,5 +5,6 @@ class MidiExporter:
         pass
 
     def export_track(self, lines: str, output_name: str):
-        pass
+        for line in lines:
+            print(line)
 

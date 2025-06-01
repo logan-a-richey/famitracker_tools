@@ -39,3 +39,6 @@ def generate_macro_label(chip: str, macro_type: int, macro_index: int) -> str:
 
     return "{}::{}::{}".format(chip, macro_type, macro_index)
 
+def get_hex2d(number: int) -> str:
+    return format(number, "02x").upper()
+

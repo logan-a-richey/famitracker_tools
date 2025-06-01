@@ -2,8 +2,7 @@
 
 import re
 from typing import Optional, List
-from utils.helpers import get_next_item
-from utils.helpers import get_token_key
+from utils.helpers import get_next_item, get_token_key, get_hex2d
 
 from core.color_logger import ColorLogger
 logger = ColorLogger("TrackFormatter").get()
@@ -41,9 +40,9 @@ class EchoBuffer:
 
 class TrackFormatter:
     ''' 
-    @publicmethod: 
-    unscramble(track: Track) -> List[str]:
-    # Return a list of lines (Track tokens unscrambled): 
+    # Contains a public method for returning a list of formatted lines (Track tokens unscrambled): 
+    # Usage:
+        TrackFormatter.unscramble(track: Track) -> List[str]:
     '''
 
     def __init__(self, project):
@@ -60,7 +59,7 @@ class TrackFormatter:
         self.lst_cols: Optional[List[int]] = None
         self.echo_buffers: List["EchoBuffer"] = None
     
-    def handle_control_flow(self, line: str) -> Optional[str]:
+    def _handle_control_flow(self, line: str) -> Optional[str]:
         ''' Handle Famitracker's frame-skipping effects:
         BXX: skip to Order XX. If XX is not a valid order, go the last order.
         CXX: simply stop the song. We can return and `target_order` will be in `seen_it`, exiting the loop.
@@ -94,6 +93,7 @@ class TrackFormatter:
 
         return None
     
+    # TODO I might pull this method out of this class since we may need it elsewhere.
     def classify_note_event(self, token: str) -> str:
         ''' 
         Determine the token event type. 
@@ -108,7 +108,7 @@ class TrackFormatter:
                 return name
         return "OTHER"
 
-    def handle_echo_buffer(self, token: str, col: int) -> str:
+    def _handle_echo_buffer(self, token: str, col: int) -> str:
         ''' 
         Determine if token should be added to EchoBuffer FixedQueue 
         Return string: unmodified token or modified echo token.
@@ -141,7 +141,7 @@ class TrackFormatter:
         # return unmodified token
         return token
 
-    def parse_order(self) -> None:
+    def _parse_order(self) -> None:
         ''' 
         Read the rows, cols of the order line by line.
         We can use the get_tokek_key() function to generate the lookup needed to uncompress the Famitracker text file format.
@@ -150,7 +150,12 @@ class TrackFormatter:
         We can use a regex on this line to scan for frame skipping effects such as Bxx, Cxx, Dxx. (order skip, song skip, and row skip, respectively)
         '''
 
+        # Contains the list of patterns for this order 
         self.lst_cols = self.track.orders[self.target_order]
+        
+        # Start of order text
+        msg = "PATTERN {}".format(get_hex2d(self.target_order))
+        self.lines.append(msg)
 
         if self.target_order not in self.lst_orders:
             raise ValueError("Target order {} not in keys {}".format(self.target_order, self.lst_orders))
@@ -169,49 +174,45 @@ class TrackFormatter:
                     token = "... .. .{}".format(" ..." * self.track.eff_cols[col])
                 
                 ## Handle echo buffer
-                token = self.handle_echo_buffer(token, col)
-                
+                token = self._handle_echo_buffer(token, col)
                 tokens.append(token)
             
-            line = "{} : ".format(str(self.target_order).rjust(2, '0')) + " : ".join(tokens)
+            # Add ROW : <line>
+            prefix: str = "ROW {} : ".format(get_hex2d(row))
+            line: str = prefix + " : ".join(tokens)
             self.lines.append(line)
 
             # Handle control flow Bxx Cxx Dxx
-            res  = self.handle_control_flow(line)
+            res: Optional[str] = self._handle_control_flow(line)
             if res:
                 logger.debug("Frame Skip: {}. Line {}".format(res, line))
                 return
         
-        # get next order
+        # Get next order
         self.target_order = get_next_item(self.target_order, self.lst_orders) 
 
-    def print_lines(self):
-        ''' Print unscrambled lines '''
-        for line in self.lines:
-            logger.debug(line)
-
-    def unscramble(self, track) -> List[str]:
+    def unscramble(self, track: "Track") -> List[str]:
         ''' Main method to call. 
-        Params: `track` : <Track> reference.
-        Return: `lines` : <List[str]>
+        @params : 
+            `track` : <Track> reference.
+        @return : 
+            `lines` : <List[str]>
         '''
-
+        
+        # Reset for track reading
         self.lines.clear()
 
         self.track = track
         self.target_order = 0
         self.target_row = 0
+
         self.lst_orders: List[int] = list(self.track.orders.keys())
         self.echo_buffers = [EchoBuffer() for _ in range(self.track.num_cols)]
 
         seen_order = set()
         while self.target_order not in seen_order:
             seen_order.add(self.target_order)
-            self.parse_order()
+            self._parse_order()
         
-        # self.print_lines()
-        print(len(self.lines))
-
-        # TODO does this return a deepcopy or reference?
         return self.lines
 

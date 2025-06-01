@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 # main.py
 
+'''
+# TODO ideal usage:
+./app --txt2mid <input.txt> <output_path>
+./app --flatten <input.txt> <output_path>
+./app --vibrato <input.txt> <output_path>
+./app --auto_tri_drums <input.txt> <output_path>
+./app --mid2txt <input.mid> <output_path>
+'''
+
 import sys
-sys.dont_write_bytecode = True # stop __pyache__
+sys.dont_write_bytecode = True 
 
 from typing import List
 

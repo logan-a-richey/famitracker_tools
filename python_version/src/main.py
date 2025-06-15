@@ -44,7 +44,7 @@ def main():
 
     for track_index, track in project.tracks.items():
         lines: List[str] = track_formatter.unscramble(track)
-        exporter.export_track(lines, "output_name.mid")
+        exporter.export_track(track, lines, "output_name.mid")
         logger.info("Created file output.mid")
 
     # logger.debug(proj)

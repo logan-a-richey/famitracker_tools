@@ -4,4 +4,4 @@ input_files
 bin
 build
 doxygen
-
+tests

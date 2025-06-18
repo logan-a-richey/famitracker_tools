@@ -39,13 +39,16 @@ class MidiExporter:
 
         note_str = note_match.group(1)
         note_pitch = 0
+        
         # note letter offset
         note_pitch = NOTE_MAPPING.get(note_str[0], 0)
+        
         # handle accidental
         if note_str[1] == '#':
             note_pitch += 1
         elif note_str[2] == 'b':
             note_pitch -= 1
+        
         # note octave
         note_octave = int(note_str[2])
         note_pitch = note_pitch + (note_octave * 12)
@@ -113,4 +116,3 @@ class MidiExporter:
                         pass
                     cc.last_pitch = note_pitch
                 
-

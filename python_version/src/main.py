@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
 # main.py
 
-'''
-# TODO ideal usage:
-./app --txt2mid <input.txt> <output_path>
-./app --flatten <input.txt> <output_path>
-./app --vibrato <input.txt> <output_path>
-./app --auto_tri_drums <input.txt> <output_path>
-./app --mid2txt <input.mid> <output_path>
-'''
-
 import sys
 sys.dont_write_bytecode = True 
 
@@ -48,9 +39,7 @@ def main():
         logger.info("Created file output.mid")
 
     # logger.debug(proj)
-    
     logger.info("Program ran successfully.")
-
 
 if __name__ == "__main__":
     main()
